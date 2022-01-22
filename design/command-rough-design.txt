@@ -1,0 +1,143 @@
+Draft - subject to change, possibly lots of change!
+
+
+REFERRING TO VARIOUS ENTITIES
+
+H       Hub     H1 H2 H3
+B       Bulb
+G       Group of bulbs
+L       Location
+C       Color
+P       Palette - set of colors
+A       Assignment - what color or sequence goes to what bulb
+S       Sequence   
+
+
+Due to associations built up using phuecmd, one may substitue one type of thing for another, for example a location for a bulb when setting a color, assuming bulbs have been assigned to locations.
+
+
+
+FOCUS ATTENTION ------
+specify a hub, bulb, ... to work with the next few commands
+
+H1       focused on Hub #1
+B35      focus on bulb 35
+
+
+HH       all hubs
+BB       all bulbs
+
+
+list HH     list all hubs
+list BB     list all bulbs
+list GG     list all bulb groups
+   ... etc ...
+
+
+Find out stuff about one bulb, what bulbs are in a group, etc
+
+B4?          -- question mark spills current status, color, bulb serial num...
+Gkitchen ?   -- list all bulbs in this group, whatever other info is in group
+                 note space or not, either okay
+
+
+
+SPECIFYING COLORS --------
+
+---- state an exact color -----
+
+#rrggbb web style (make assumptions RGB spaces)
+
+R O Y G C B V P     Red, Yellow, ...  Purple (1/2way CIE purple line)
+RO   RRO      50-50 red orange, more red than orange
+xy 0.355 0.515
+
+30%R  30%#FF0000    red at 1/3 brightness
+R/3                 red at 1/3 brightness
+dimgold       by names you defined (none are pre-built-in) (or provide some?)
+
+
+C bumbum = GGB dim        define a color name
+C dimgold = gold / 3      
+P xmasshow = bumbum gold dimgold berryred oldred dimred hotyellow hotwhite dimwhite jollygreen goodgreen forest funkypurple deadgraygoo 
+
+
+
+--- modify colors ----
+
+((color)) + x%      brighter  (change "bri")
+((color)) - x%      dimmer
+((color)) + x%G     move x% toward "pure" Green 
+((color)) + x%((color))   .. toward some other color. 
+                   100% is totally other color
+
+YGG-60%sat    olive green: yellow-green more green, cut saturation 60%
+
+
+THEORY   (???)  wip...
+ (color) (op)(color) (op)(color) ... 
+
+ (color)  (op)    not followed by a color:  
+	                assume max white as target color
+ (op)(color)      no initla color: start with zero black. use: "30%R"
+
+	where	
+		color =   rgbhex, colorletters, named color, ...?...
+		op    =   
+			+num%  -   change to/from given color or white
+			+num%sat   increase/decrease saturation
+			num%   blend in this much new color or white
+			/num   dimmer ("bri" channel, no x,y shift)
+                                  (never has target color)
+
+
+
+DEFINE A COLOR NAME: 
+
+C dimmerred = xmasred - 18%
+
+--------- WORKING THE SYSTEM ------
+
+
+B15 33%B         bulb #15 to show blue at 1/3 brightness
+B16 B15 20%V     bulb #16: be same as bulb 15 nudged 20% toward pure violet
+
+
+
+
+
+----------- SYSTEM -----------
+RESET, DIAGNOSE, VERIFY, CLEARING, FORGETTING STUFF 
+
+
+show H2           -- blinks all lights attached to hub #2
+show Bkitchentop  -- blinks bulb named "kitchentop"
+show ...          -- etc.
+stop              -- stop blinking. also, stops when new 'show' cmd 
+
+all off           -- turns off all bulbs
+ 		         (remembers all bulb colors, place in show seq, ..)
+all on     	  -- go back to as you were before "all off"
+all on white      -- turns on all bulbs all hubs, specified color 
+                         (default 70%maxwhite ??)
+all H3 50%green   -- turns on all bulbs only on hub #3 to half-bright green
+
+
+
+====== REMOTE CONTROL - INTEPROCESS COMMUNICATION =======
+
+tbd... 
+define dbus protocol to convey command lines via IPC
+
+maybe define HTTP connections 
+	send/rcv other phuecmd on another system
+	receive command from whatever authorized source
+AWS ? 
+	define shows, seq, color pals, in cloud etc 
+        for others to use, to access multi locations, 
+   	for company wide access & control, archiving...
+receive SMS cellphone "emergency all on", workable from home alarm, RING etc?
+
+
+
+

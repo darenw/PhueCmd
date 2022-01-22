@@ -1,0 +1,83 @@
+
+Every entity has an index, to find it in global arrays, and a name
+Names: long descriptive for writing output, and short handy for commands
+
+
+hubs[]  Hub
+bulbs[]  Bulb
+locations[]  Location
+colors[]      Color
+
+
+
+
+Hub
+	.macaddr
+	.ser num
+	.ipaddr
+	.passwrd (mile long base62 gibberish)
+	.name, .shortname  for human use "1707"
+	[] ibulbs
+	-CommandBulb(ibulb (or name?),  commadn)
+		bulb[i].command(...) 
+	
+
+
+Bulb
+	.ihub
+	.latest color setting B, (x,y), whitetemp
+	-InquirePhysicalBulb()  
+		http hub for this bulb's current color etc
+	-Tunr(ON/OFF)
+	-Command(...) => string 
+
+
+Group
+	.ibulb[]
+	.name, .shortname
+	
+	
+Color
+	-L, x,y
+	-() rgb (what def?)
+	-() recommended web #rrggbb
+
+
+Sequence 
+	??   list of colors, timing cues, slow/fast transitions, 
+
+
+Location
+	.name, .shortname
+	.descr    "2nd left along the top of the dining room bookshelf"
+	.x,y,z (tbd) geometric location, for plotting on maps
+
+Assignment
+	.ibulb, ilocation
+
+
+Pattern (?)
+	.[] colors (or pal/[n]th member color) <--> bulbs in a group
+	?? 
+	
+
+
+PhueSystem
+	all the bulbs and hubs you are working with, 
+	all the sequences, shows, ...
+
+
+EXAMPLE USAGE ---------
+
+PhueSystem   
+	kitchen       -- lights in kitchen
+	lowresimage   -- show&tell w box lamps
+	home          -- all in kitchen
+	xmas          -- just bulbs in xmas display with their own hub
+no cross-commanding between systems. You are in one system only at a time.
+each system has one or more hubs. Each hub belongs to only one system.
+
+
+	
+	
+

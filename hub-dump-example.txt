@@ -1,0 +1,1340 @@
+{
+	"lights": {
+		"20": {
+			"state": {
+				"on": true,
+				"bri": 100,
+				"hue": 1211,
+				"sat": 200,
+				"effect": "none",
+				"xy": [
+					0.22,
+					0.12
+				],
+				"ct": 173,
+				"alert": "none",
+				"colormode": "hs",
+				"mode": "homeautomation",
+				"reachable": false
+			},
+			"swupdate": {
+				"state": "transferring",
+				"lastinstall": "2019-01-10T10:50:49"
+			},
+			"type": "Extended color light",
+			"name": "PHOld3",
+			"modelid": "LCT007",
+			"manufacturername": "Philips",
+			"productname": "Hue color lamp",
+			"capabilities": {
+				"certified": true,
+				"control": {
+					"mindimlevel": 2000,
+					"maxlumen": 800,
+					"colorgamuttype": "B",
+					"colorgamut": [
+						[
+							0.675,
+							0.322
+						],
+						[
+							0.409,
+							0.518
+						],
+						[
+							0.167,
+							0.04
+						]
+					],
+					"ct": {
+						"min": 153,
+						"max": 500
+					}
+				},
+				"streaming": {
+					"renderer": true,
+					"proxy": true
+				}
+			},
+			"config": {
+				"archetype": "sultanbulb",
+				"function": "mixed",
+				"direction": "omnidirectional",
+				"startup": {
+					"mode": "safety",
+					"configured": true
+				}
+			},
+			"uniqueid": "00:17:88:01:10:5a:a2:ca-0b",
+			"swversion": "5.127.1.26420"
+		},
+		"21": {
+			"state": {
+				"on": true,
+				"bri": 100,
+				"hue": 1211,
+				"sat": 200,
+				"effect": "none",
+				"xy": [
+					0.22,
+					0.12
+				],
+				"ct": 153,
+				"alert": "none",
+				"colormode": "hs",
+				"mode": "homeautomation",
+				"reachable": false
+			},
+			"swupdate": {
+				"state": "transferring",
+				"lastinstall": "2019-01-10T10:50:44"
+			},
+			"type": "Extended color light",
+			"name": "Brk1",
+			"modelid": "LCT007",
+			"manufacturername": "Philips",
+			"productname": "Hue color lamp",
+			"capabilities": {
+				"certified": true,
+				"control": {
+					"mindimlevel": 2000,
+					"maxlumen": 800,
+					"colorgamuttype": "B",
+					"colorgamut": [
+						[
+							0.675,
+							0.322
+						],
+						[
+							0.409,
+							0.518
+						],
+						[
+							0.167,
+							0.04
+						]
+					],
+					"ct": {
+						"min": 153,
+						"max": 500
+					}
+				},
+				"streaming": {
+					"renderer": true,
+					"proxy": true
+				}
+			},
+			"config": {
+				"archetype": "sultanbulb",
+				"function": "mixed",
+				"direction": "omnidirectional",
+				"startup": {
+					"mode": "safety",
+					"configured": true
+				}
+			},
+			"uniqueid": "00:17:88:01:10:5a:54:6e-0b",
+			"swversion": "5.127.1.26420"
+		},
+		"22": {
+			"state": {
+				"on": true,
+				"bri": 178,
+				"hue": 1400,
+				"sat": 252,
+				"effect": "none",
+				"xy": [
+					0.22,
+					0.12
+				],
+				"ct": 173,
+				"alert": "none",
+				"colormode": "xy",
+				"mode": "homeautomation",
+				"reachable": false
+			},
+			"swupdate": {
+				"state": "transferring",
+				"lastinstall": "2019-01-10T10:50:38"
+			},
+			"type": "Extended color light",
+			"name": "PHOld4",
+			"modelid": "LCT007",
+			"manufacturername": "Philips",
+			"productname": "Hue color lamp",
+			"capabilities": {
+				"certified": true,
+				"control": {
+					"mindimlevel": 2000,
+					"maxlumen": 800,
+					"colorgamuttype": "B",
+					"colorgamut": [
+						[
+							0.675,
+							0.322
+						],
+						[
+							0.409,
+							0.518
+						],
+						[
+							0.167,
+							0.04
+						]
+					],
+					"ct": {
+						"min": 153,
+						"max": 500
+					}
+				},
+				"streaming": {
+					"renderer": true,
+					"proxy": true
+				}
+			},
+			"config": {
+				"archetype": "sultanbulb",
+				"function": "mixed",
+				"direction": "omnidirectional",
+				"startup": {
+					"mode": "safety",
+					"configured": true
+				}
+			},
+			"uniqueid": "00:17:88:01:10:44:bf:77-0b",
+			"swversion": "5.127.1.26420"
+		},
+		"23": {
+			"state": {
+				"on": true,
+				"bri": 100,
+				"hue": 1211,
+				"sat": 200,
+				"effect": "none",
+				"xy": [
+					0.22,
+					0.12
+				],
+				"ct": 153,
+				"alert": "none",
+				"colormode": "hs",
+				"mode": "homeautomation",
+				"reachable": false
+			},
+			"swupdate": {
+				"state": "transferring",
+				"lastinstall": "2019-01-10T10:49:54"
+			},
+			"type": "Extended color light",
+			"name": "PHN04",
+			"modelid": "LCT014",
+			"manufacturername": "Philips",
+			"productname": "Hue color lamp",
+			"capabilities": {
+				"certified": true,
+				"control": {
+					"mindimlevel": 1000,
+					"maxlumen": 800,
+					"colorgamuttype": "C",
+					"colorgamut": [
+						[
+							0.6915,
+							0.3083
+						],
+						[
+							0.17,
+							0.7
+						],
+						[
+							0.1532,
+							0.0475
+						]
+					],
+					"ct": {
+						"min": 153,
+						"max": 500
+					}
+				},
+				"streaming": {
+					"renderer": true,
+					"proxy": true
+				}
+			},
+			"config": {
+				"archetype": "sultanbulb",
+				"function": "mixed",
+				"direction": "omnidirectional",
+				"startup": {
+					"mode": "safety",
+					"configured": true
+				}
+			},
+			"uniqueid": "00:17:88:01:02:35:3f:f3-0b",
+			"swversion": "1.46.13_r26312",
+			"swconfigid": "56D25448",
+			"productid": "Philips-LCT014-1-A19ECLv4"
+		},
+		"24": {
+			"state": {
+				"on": true,
+				"bri": 178,
+				"hue": 1400,
+				"sat": 252,
+				"effect": "none",
+				"xy": [
+					0.22,
+					0.12
+				],
+				"ct": 173,
+				"alert": "none",
+				"colormode": "xy",
+				"mode": "homeautomation",
+				"reachable": false
+			},
+			"swupdate": {
+				"state": "transferring",
+				"lastinstall": "2019-01-10T10:50:35"
+			},
+			"type": "Extended color light",
+			"name": "PHOld2",
+			"modelid": "LCT007",
+			"manufacturername": "Philips",
+			"productname": "Hue color lamp",
+			"capabilities": {
+				"certified": true,
+				"control": {
+					"mindimlevel": 2000,
+					"maxlumen": 800,
+					"colorgamuttype": "B",
+					"colorgamut": [
+						[
+							0.675,
+							0.322
+						],
+						[
+							0.409,
+							0.518
+						],
+						[
+							0.167,
+							0.04
+						]
+					],
+					"ct": {
+						"min": 153,
+						"max": 500
+					}
+				},
+				"streaming": {
+					"renderer": true,
+					"proxy": true
+				}
+			},
+			"config": {
+				"archetype": "sultanbulb",
+				"function": "mixed",
+				"direction": "omnidirectional",
+				"startup": {
+					"mode": "safety",
+					"configured": true
+				}
+			},
+			"uniqueid": "00:17:88:01:10:5a:6b:ba-0b",
+			"swversion": "5.127.1.26420"
+		},
+		"25": {
+			"state": {
+				"on": true,
+				"bri": 100,
+				"hue": 1211,
+				"sat": 200,
+				"effect": "none",
+				"xy": [
+					0.22,
+					0.12
+				],
+				"ct": 153,
+				"alert": "none",
+				"colormode": "hs",
+				"mode": "homeautomation",
+				"reachable": false
+			},
+			"swupdate": {
+				"state": "transferring",
+				"lastinstall": "2019-01-10T10:49:50"
+			},
+			"type": "Extended color light",
+			"name": "PHN06",
+			"modelid": "LCT014",
+			"manufacturername": "Philips",
+			"productname": "Hue color lamp",
+			"capabilities": {
+				"certified": true,
+				"control": {
+					"mindimlevel": 1000,
+					"maxlumen": 800,
+					"colorgamuttype": "C",
+					"colorgamut": [
+						[
+							0.6915,
+							0.3083
+						],
+						[
+							0.17,
+							0.7
+						],
+						[
+							0.1532,
+							0.0475
+						]
+					],
+					"ct": {
+						"min": 153,
+						"max": 500
+					}
+				},
+				"streaming": {
+					"renderer": true,
+					"proxy": true
+				}
+			},
+			"config": {
+				"archetype": "sultanbulb",
+				"function": "mixed",
+				"direction": "omnidirectional",
+				"startup": {
+					"mode": "safety",
+					"configured": true
+				}
+			},
+			"uniqueid": "00:17:88:01:02:32:d4:18-0b",
+			"swversion": "1.46.13_r26312",
+			"swconfigid": "56D25448",
+			"productid": "Philips-LCT014-1-A19ECLv4"
+		},
+		"26": {
+			"state": {
+				"on": true,
+				"bri": 100,
+				"hue": 1211,
+				"sat": 200,
+				"effect": "none",
+				"xy": [
+					0.22,
+					0.12
+				],
+				"ct": 0,
+				"alert": "none",
+				"colormode": "hs",
+				"mode": "homeautomation",
+				"reachable": false
+			},
+			"swupdate": {
+				"state": "transferring",
+				"lastinstall": null
+			},
+			"type": "Extended color light",
+			"name": "PHOld5",
+			"modelid": "LCT007",
+			"manufacturername": "Philips",
+			"productname": "Hue color lamp",
+			"capabilities": {
+				"certified": true,
+				"control": {
+					"mindimlevel": 2000,
+					"maxlumen": 800,
+					"colorgamuttype": "other",
+					"ct": {
+						"min": 0,
+						"max": 65535
+					}
+				},
+				"streaming": {
+					"renderer": false,
+					"proxy": false
+				}
+			},
+			"config": {
+				"archetype": "sultanbulb",
+				"function": "mixed",
+				"direction": "omnidirectional"
+			},
+			"uniqueid": "00:17:88:01:10:41:44:8e-0b",
+			"swversion": "5.38.1.14919"
+		},
+		"27": {
+			"state": {
+				"on": true,
+				"bri": 178,
+				"hue": 1400,
+				"sat": 252,
+				"effect": "none",
+				"xy": [
+					0.22,
+					0.12
+				],
+				"ct": 153,
+				"alert": "none",
+				"colormode": "xy",
+				"mode": "homeautomation",
+				"reachable": false
+			},
+			"swupdate": {
+				"state": "transferring",
+				"lastinstall": "2019-01-10T10:50:03"
+			},
+			"type": "Extended color light",
+			"name": "Extended color light 1",
+			"modelid": "LCT016",
+			"manufacturername": "Philips",
+			"productname": "Hue color lamp",
+			"capabilities": {
+				"certified": true,
+				"control": {
+					"mindimlevel": 1000,
+					"maxlumen": 800,
+					"colorgamuttype": "C",
+					"colorgamut": [
+						[
+							0.6915,
+							0.3083
+						],
+						[
+							0.17,
+							0.7
+						],
+						[
+							0.1532,
+							0.0475
+						]
+					],
+					"ct": {
+						"min": 153,
+						"max": 500
+					}
+				},
+				"streaming": {
+					"renderer": true,
+					"proxy": true
+				}
+			},
+			"config": {
+				"archetype": "sultanbulb",
+				"function": "mixed",
+				"direction": "omnidirectional",
+				"startup": {
+					"mode": "safety",
+					"configured": true
+				}
+			},
+			"uniqueid": "00:17:88:01:03:7a:d6:41-0b",
+			"swversion": "1.46.13_r26312",
+			"swconfigid": "9DC82D22",
+			"productid": "Philips-LCT016-1-A19ECLv5"
+		},
+		"28": {
+			"state": {
+				"on": true,
+				"bri": 178,
+				"hue": 1400,
+				"sat": 252,
+				"effect": "none",
+				"xy": [
+					0.22,
+					0.12
+				],
+				"ct": 153,
+				"alert": "none",
+				"colormode": "xy",
+				"mode": "homeautomation",
+				"reachable": false
+			},
+			"swupdate": {
+				"state": "transferring",
+				"lastinstall": "2019-01-10T10:50:18"
+			},
+			"type": "Extended color light",
+			"name": "Extended color light 2",
+			"modelid": "LCT016",
+			"manufacturername": "Philips",
+			"productname": "Hue color lamp",
+			"capabilities": {
+				"certified": true,
+				"control": {
+					"mindimlevel": 1000,
+					"maxlumen": 800,
+					"colorgamuttype": "C",
+					"colorgamut": [
+						[
+							0.6915,
+							0.3083
+						],
+						[
+							0.17,
+							0.7
+						],
+						[
+							0.1532,
+							0.0475
+						]
+					],
+					"ct": {
+						"min": 153,
+						"max": 500
+					}
+				},
+				"streaming": {
+					"renderer": true,
+					"proxy": true
+				}
+			},
+			"config": {
+				"archetype": "sultanbulb",
+				"function": "mixed",
+				"direction": "omnidirectional",
+				"startup": {
+					"mode": "safety",
+					"configured": true
+				}
+			},
+			"uniqueid": "00:17:88:01:03:7b:67:ff-0b",
+			"swversion": "1.46.13_r26312",
+			"swconfigid": "9DC82D22",
+			"productid": "Philips-LCT016-1-A19ECLv5"
+		},
+		"29": {
+			"state": {
+				"on": true,
+				"bri": 170,
+				"hue": 51500,
+				"sat": 190,
+				"effect": "none",
+				"xy": [
+					0.3065,
+					0.177
+				],
+				"ct": 153,
+				"alert": "none",
+				"colormode": "hs",
+				"mode": "homeautomation",
+				"reachable": true
+			},
+			"swupdate": {
+				"state": "readytoinstall",
+				"lastinstall": "2019-01-10T10:49:58"
+			},
+			"type": "Extended color light",
+			"name": "Extended color light 3",
+			"modelid": "LCT016",
+			"manufacturername": "Philips",
+			"productname": "Hue color lamp",
+			"capabilities": {
+				"certified": true,
+				"control": {
+					"mindimlevel": 1000,
+					"maxlumen": 800,
+					"colorgamuttype": "C",
+					"colorgamut": [
+						[
+							0.6915,
+							0.3083
+						],
+						[
+							0.17,
+							0.7
+						],
+						[
+							0.1532,
+							0.0475
+						]
+					],
+					"ct": {
+						"min": 153,
+						"max": 500
+					}
+				},
+				"streaming": {
+					"renderer": true,
+					"proxy": true
+				}
+			},
+			"config": {
+				"archetype": "sultanbulb",
+				"function": "mixed",
+				"direction": "omnidirectional",
+				"startup": {
+					"mode": "safety",
+					"configured": true
+				}
+			},
+			"uniqueid": "00:17:88:01:03:b2:31:0f-0b",
+			"swversion": "1.46.13_r26312",
+			"swconfigid": "9DC82D22",
+			"productid": "Philips-LCT016-1-A19ECLv5"
+		},
+		"30": {
+			"state": {
+				"on": true,
+				"bri": 100,
+				"hue": 1211,
+				"sat": 200,
+				"effect": "none",
+				"xy": [
+					0.22,
+					0.12
+				],
+				"ct": 153,
+				"alert": "none",
+				"colormode": "hs",
+				"mode": "homeautomation",
+				"reachable": false
+			},
+			"swupdate": {
+				"state": "transferring",
+				"lastinstall": "2019-01-10T10:50:14"
+			},
+			"type": "Extended color light",
+			"name": "Extended color light 4",
+			"modelid": "LCT016",
+			"manufacturername": "Philips",
+			"productname": "Hue color lamp",
+			"capabilities": {
+				"certified": true,
+				"control": {
+					"mindimlevel": 1000,
+					"maxlumen": 800,
+					"colorgamuttype": "C",
+					"colorgamut": [
+						[
+							0.6915,
+							0.3083
+						],
+						[
+							0.17,
+							0.7
+						],
+						[
+							0.1532,
+							0.0475
+						]
+					],
+					"ct": {
+						"min": 153,
+						"max": 500
+					}
+				},
+				"streaming": {
+					"renderer": true,
+					"proxy": true
+				}
+			},
+			"config": {
+				"archetype": "sultanbulb",
+				"function": "mixed",
+				"direction": "omnidirectional",
+				"startup": {
+					"mode": "safety",
+					"configured": true
+				}
+			},
+			"uniqueid": "00:17:88:01:04:28:02:a1-0b",
+			"swversion": "1.46.13_r26312",
+			"swconfigid": "9DC82D22",
+			"productid": "Philips-LCT016-1-A19ECLv5"
+		},
+		"31": {
+			"state": {
+				"on": true,
+				"bri": 180,
+				"hue": 21500,
+				"sat": 210,
+				"effect": "none",
+				"xy": [
+					0.2755,
+					0.5921
+				],
+				"ct": 153,
+				"alert": "none",
+				"colormode": "hs",
+				"mode": "homeautomation",
+				"reachable": true
+			},
+			"swupdate": {
+				"state": "readytoinstall",
+				"lastinstall": "2019-01-10T10:50:08"
+			},
+			"type": "Extended color light",
+			"name": "Extended color light 5",
+			"modelid": "LCT016",
+			"manufacturername": "Philips",
+			"productname": "Hue color lamp",
+			"capabilities": {
+				"certified": true,
+				"control": {
+					"mindimlevel": 1000,
+					"maxlumen": 800,
+					"colorgamuttype": "C",
+					"colorgamut": [
+						[
+							0.6915,
+							0.3083
+						],
+						[
+							0.17,
+							0.7
+						],
+						[
+							0.1532,
+							0.0475
+						]
+					],
+					"ct": {
+						"min": 153,
+						"max": 500
+					}
+				},
+				"streaming": {
+					"renderer": true,
+					"proxy": true
+				}
+			},
+			"config": {
+				"archetype": "sultanbulb",
+				"function": "mixed",
+				"direction": "omnidirectional",
+				"startup": {
+					"mode": "safety",
+					"configured": true
+				}
+			},
+			"uniqueid": "00:17:88:01:03:ed:9b:b8-0b",
+			"swversion": "1.46.13_r26312",
+			"swconfigid": "9DC82D22",
+			"productid": "Philips-LCT016-1-A19ECLv5"
+		}
+	},
+	"groups": {
+		"1": {
+			"name": "middlethree",
+			"lights": [
+				"20",
+				"22",
+				"24"
+			],
+			"sensors": [],
+			"type": "LightGroup",
+			"state": {
+				"all_on": true,
+				"any_on": true
+			},
+			"recycle": false,
+			"action": {
+				"on": true,
+				"bri": 178,
+				"hue": 1400,
+				"sat": 252,
+				"effect": "none",
+				"xy": [
+					0.22,
+					0.12
+				],
+				"ct": 173,
+				"alert": "none",
+				"colormode": "xy"
+			}
+		},
+		"2": {
+			"name": "studio one",
+			"lights": [
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31"
+			],
+			"sensors": [],
+			"type": "Room",
+			"state": {
+				"all_on": true,
+				"any_on": true
+			},
+			"recycle": false,
+			"class": "Other",
+			"action": {
+				"on": true,
+				"bri": 180,
+				"hue": 21500,
+				"sat": 210,
+				"effect": "none",
+				"xy": [
+					0.2755,
+					0.5921
+				],
+				"ct": 153,
+				"alert": "none",
+				"colormode": "hs"
+			}
+		}
+	},
+	"config": {
+		"name": "Philips hue",
+		"zigbeechannel": 20,
+		"bridgeid": "001788FFFE218A2E",
+		"mac": "00:17:88:21:8a:2e",
+		"dhcp": true,
+		"ipaddress": "192.168.11.41",
+		"netmask": "255.255.255.0",
+		"gateway": "192.168.11.1",
+		"proxyaddress": "none",
+		"proxyport": 0,
+		"UTC": "2022-01-22T07:58:43",
+		"localtime": "2022-01-21T23:58:43",
+		"timezone": "America/Los_Angeles",
+		"modelid": "BSB002",
+		"datastoreversion": "74",
+		"swversion": "1810251352",
+		"apiversion": "1.28.0",
+		"swupdate": {
+			"updatestate": 2,
+			"checkforupdate": false,
+			"devicetypes": {
+				"bridge": false,
+				"lights": [
+					"29",
+					"31"
+				],
+				"sensors": []
+			},
+			"url": "",
+			"text": "BSB002 - 1.38SR4.2",
+			"notify": true
+		},
+		"swupdate2": {
+			"checkforupdate": false,
+			"lastchange": "2021-06-05T03:34:33",
+			"bridge": {
+				"state": "readytoinstall",
+				"lastinstall": "2019-01-09T06:37:21"
+			},
+			"state": "anyreadytoinstall",
+			"autoinstall": {
+				"updatetime": "T14:00:00",
+				"on": false
+			}
+		},
+		"linkbutton": false,
+		"portalservices": true,
+		"portalconnection": "connected",
+		"portalstate": {
+			"signedon": true,
+			"incoming": false,
+			"outgoing": true,
+			"communication": "disconnected"
+		},
+		"internetservices": {
+			"internet": "connected",
+			"remoteaccess": "connected",
+			"time": "connected",
+			"swupdate": "connected"
+		},
+		"factorynew": false,
+		"replacesbridgeid": null,
+		"backup": {
+			"status": "idle",
+			"errorcode": 0
+		},
+		"starterkitid": "",
+		"whitelist": {
+			"0000000020352ef17dce16b17dce16b1": {
+				"last use date": "2017-01-03T04:58:09",
+				"create date": "2016-01-17T12:09:54",
+				"name": "Hue#Samsung GT-P6210"
+			},
+			"RxhiiNRJh-EJLlIWYnBzqq5ZNU5beCxYMtXF4pal": {
+				"last use date": "2016-03-20T06:02:53",
+				"create date": "2016-03-20T04:41:53",
+				"name": "Huedini"
+			},
+			"-eDW2YzKuuXIIarSo2Xt8P64Ta36DU5zWi4qyPIE": {
+				"last use date": "2016-04-02T20:52:52",
+				"create date": "2016-04-02T20:52:52",
+				"name": "Hue#Samsung GT-P6210"
+			},
+			"K4FEYMLdk2KRVuLsAkpWl17fGVUvkfTcqVWu7cPz": {
+				"last use date": "2016-09-26T06:00:12",
+				"create date": "2016-05-06T05:07:19",
+				"name": "Hue#Samsung GT-P6210"
+			},
+			"KYJgXmYa9vh1ljeCVv42mkcjLLc7raCGsf4WKbGW": {
+				"last use date": "2016-05-30T00:39:39",
+				"create date": "2016-05-30T00:39:39",
+				"name": "Hue#Samsung GT-P6210"
+			},
+			"78g2lrMNHZHZFozjDJ7z7lneQhl8guZpzssU0HIr": {
+				"last use date": "2022-01-22T07:58:43",
+				"create date": "2016-08-26T02:19:05",
+				"name": "my_hue_app#dsw"
+			},
+			"HvX3elKcXv6BcYf5Za4kcw326Or27sBQvlIbBlAa": {
+				"last use date": "2018-05-17T15:45:07",
+				"create date": "2017-11-26T09:52:41",
+				"name": "myhueappxxxyyyzzz"
+			},
+			"V3o8VpmtoxBsbkn-QqEYiZPNI2nGt1JEPSx1-kLi": {
+				"last use date": "2019-01-10T21:07:19",
+				"create date": "2019-01-09T06:34:41",
+				"name": "Hue 3#LGE LG-TP450"
+			}
+		}
+	},
+	"schedules": {},
+	"scenes": {
+		"AObGeKKsW383Xhz": {
+			"name": "Savanna sunset",
+			"type": "GroupScene",
+			"group": "2",
+			"lights": [
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31"
+			],
+			"owner": "V3o8VpmtoxBsbkn-QqEYiZPNI2nGt1JEPSx1-kLi",
+			"recycle": false,
+			"locked": false,
+			"appdata": {
+				"version": 1,
+				"data": "5HT0Y_r02_d15"
+			},
+			"picture": "",
+			"lastupdated": "2019-01-09T06:39:43",
+			"version": 2
+		},
+		"lEQxZ3Nfpvta7hB": {
+			"name": "Tropical twilight",
+			"type": "GroupScene",
+			"group": "2",
+			"lights": [
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31"
+			],
+			"owner": "V3o8VpmtoxBsbkn-QqEYiZPNI2nGt1JEPSx1-kLi",
+			"recycle": false,
+			"locked": false,
+			"appdata": {
+				"version": 1,
+				"data": "q98cB_r02_d16"
+			},
+			"picture": "",
+			"lastupdated": "2019-01-09T06:39:45",
+			"version": 2
+		},
+		"Z0IoQhEnaFjuMpO": {
+			"name": "Arctic aurora",
+			"type": "GroupScene",
+			"group": "2",
+			"lights": [
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31"
+			],
+			"owner": "V3o8VpmtoxBsbkn-QqEYiZPNI2nGt1JEPSx1-kLi",
+			"recycle": false,
+			"locked": false,
+			"appdata": {
+				"version": 1,
+				"data": "h2xZK_r02_d17"
+			},
+			"picture": "",
+			"lastupdated": "2019-01-09T06:39:47",
+			"version": 2
+		},
+		"-WmVsNFHlLp5G5l": {
+			"name": "Spring blossom",
+			"type": "GroupScene",
+			"group": "2",
+			"lights": [
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31"
+			],
+			"owner": "V3o8VpmtoxBsbkn-QqEYiZPNI2nGt1JEPSx1-kLi",
+			"recycle": false,
+			"locked": false,
+			"appdata": {
+				"version": 1,
+				"data": "1tEVl_r02_d18"
+			},
+			"picture": "",
+			"lastupdated": "2019-01-09T06:39:48",
+			"version": 2
+		},
+		"gIf67Lq8DNgjnZl": {
+			"name": "Relax",
+			"type": "GroupScene",
+			"group": "2",
+			"lights": [
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31"
+			],
+			"owner": "V3o8VpmtoxBsbkn-QqEYiZPNI2nGt1JEPSx1-kLi",
+			"recycle": false,
+			"locked": false,
+			"appdata": {
+				"version": 1,
+				"data": "D9BDz_r02_d01"
+			},
+			"picture": "",
+			"lastupdated": "2019-01-09T06:39:49",
+			"version": 2
+		},
+		"ExGi7G5fZ0s5m8N": {
+			"name": "Read",
+			"type": "GroupScene",
+			"group": "2",
+			"lights": [
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31"
+			],
+			"owner": "V3o8VpmtoxBsbkn-QqEYiZPNI2nGt1JEPSx1-kLi",
+			"recycle": false,
+			"locked": false,
+			"appdata": {
+				"version": 1,
+				"data": "Ny4OR_r02_d02"
+			},
+			"picture": "",
+			"lastupdated": "2019-01-09T06:39:50",
+			"version": 2
+		},
+		"uM6hoTQHyRUjg03": {
+			"name": "Concentrate",
+			"type": "GroupScene",
+			"group": "2",
+			"lights": [
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31"
+			],
+			"owner": "V3o8VpmtoxBsbkn-QqEYiZPNI2nGt1JEPSx1-kLi",
+			"recycle": false,
+			"locked": false,
+			"appdata": {
+				"version": 1,
+				"data": "2cAHL_r02_d03"
+			},
+			"picture": "",
+			"lastupdated": "2019-01-09T06:39:50",
+			"version": 2
+		},
+		"yvd-a5xC-LKWXmY": {
+			"name": "Energize",
+			"type": "GroupScene",
+			"group": "2",
+			"lights": [
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31"
+			],
+			"owner": "V3o8VpmtoxBsbkn-QqEYiZPNI2nGt1JEPSx1-kLi",
+			"recycle": false,
+			"locked": false,
+			"appdata": {
+				"version": 1,
+				"data": "q83Jl_r02_d04"
+			},
+			"picture": "",
+			"lastupdated": "2019-01-09T06:39:51",
+			"version": 2
+		},
+		"pNP-f5BLG8fapQ5": {
+			"name": "Bright",
+			"type": "GroupScene",
+			"group": "2",
+			"lights": [
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31"
+			],
+			"owner": "V3o8VpmtoxBsbkn-QqEYiZPNI2nGt1JEPSx1-kLi",
+			"recycle": false,
+			"locked": false,
+			"appdata": {
+				"version": 1,
+				"data": "M5qTI_r02_d05"
+			},
+			"picture": "",
+			"lastupdated": "2019-01-09T06:39:52",
+			"version": 2
+		},
+		"CHIDt2Q9jEUx0Bq": {
+			"name": "Dimmed",
+			"type": "GroupScene",
+			"group": "2",
+			"lights": [
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31"
+			],
+			"owner": "V3o8VpmtoxBsbkn-QqEYiZPNI2nGt1JEPSx1-kLi",
+			"recycle": false,
+			"locked": false,
+			"appdata": {
+				"version": 1,
+				"data": "nKEPo_r02_d06"
+			},
+			"picture": "",
+			"lastupdated": "2019-01-09T06:39:52",
+			"version": 2
+		},
+		"x2ojPaIDjqkiX6j": {
+			"name": "Nightlight",
+			"type": "GroupScene",
+			"group": "2",
+			"lights": [
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31"
+			],
+			"owner": "V3o8VpmtoxBsbkn-QqEYiZPNI2nGt1JEPSx1-kLi",
+			"recycle": false,
+			"locked": false,
+			"appdata": {
+				"version": 1,
+				"data": "RgtPV_r02_d07"
+			},
+			"picture": "",
+			"lastupdated": "2019-01-09T06:39:53",
+			"version": 2
+		}
+	},
+	"rules": {},
+	"sensors": {
+		"1": {
+			"state": {
+				"daylight": null,
+				"lastupdated": "none"
+			},
+			"config": {
+				"on": true,
+				"configured": false,
+				"sunriseoffset": 30,
+				"sunsetoffset": -30
+			},
+			"name": "Daylight",
+			"type": "Daylight",
+			"modelid": "PHDL00",
+			"manufacturername": "Philips",
+			"swversion": "1.0"
+		}
+	},
+	"resourcelinks": {}
+}

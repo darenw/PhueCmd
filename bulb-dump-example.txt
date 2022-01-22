@@ -1,0 +1,70 @@
+{
+	"state": {
+		"on": true,
+		"bri": 62,
+		"hue": 31000,
+		"sat": 194,
+		"effect": "none",
+		"xy": [
+			0.2165,
+			0.4985
+		],
+		"ct": 153,
+		"alert": "none",
+		"colormode": "hs",
+		"mode": "homeautomation",
+		"reachable": true
+	},
+	"swupdate": {
+		"state": "readytoinstall",
+		"lastinstall": "2019-01-10T10:49:58"
+	},
+	"type": "Extended color light",
+	"name": "Extended color light 3",
+	"modelid": "LCT016",
+	"manufacturername": "Philips",
+	"productname": "Hue color lamp",
+	"capabilities": {
+		"certified": true,
+		"control": {
+			"mindimlevel": 1000,
+			"maxlumen": 800,
+			"colorgamuttype": "C",
+			"colorgamut": [
+				[
+					0.6915,
+					0.3083
+				],
+				[
+					0.17,
+					0.7
+				],
+				[
+					0.1532,
+					0.0475
+				]
+			],
+			"ct": {
+				"min": 153,
+				"max": 500
+			}
+		},
+		"streaming": {
+			"renderer": true,
+			"proxy": true
+		}
+	},
+	"config": {
+		"archetype": "sultanbulb",
+		"function": "mixed",
+		"direction": "omnidirectional",
+		"startup": {
+			"mode": "safety",
+			"configured": true
+		}
+	},
+	"uniqueid": "00:17:88:01:03:b2:31:0f-0b",
+	"swversion": "1.46.13_r26312",
+	"swconfigid": "9DC82D22",
+	"productid": "Philips-LCT016-1-A19ECLv5"
+}
