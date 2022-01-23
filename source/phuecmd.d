@@ -67,6 +67,7 @@ class Hub  {
     
     void find_bulbs()   {
         // DANGER! Does not check if bulb already in bulbs[]
+        auto spewage = get( myurl ~ "lights/");
         
     }
 }
@@ -99,7 +100,7 @@ class Bulb {
     
     
     void turn(BulbState desired)   {
-        send( (desired==BulbState.ON)? "true" : "false" );
+        send( (desired==BulbState.ON)? "{\"on\":true}" : "{\"on\":false}" );
     }
     
     void send(string jsoncmd)  {
@@ -224,10 +225,10 @@ int main(string[] args)  {
         hubs[ihub1].get_all_hub_info();
     }
     
-    Bulb bulb29 = new Bulb(0, "Bedroom Lamp", "Bedrm", 29);
-    writeln("YEEE!!!");
-    bulb29.set_color(new Color(0.3,0.4,0.2));
     
+    // Hardcoded scaffolding, define one bulb for immediate testing
+    Bulb bulb29 = new Bulb(0, "Bedroom Lamp", "Bedrm", 29);
+     
     bool running = true;
     while (running)  {
         if (icurrenthub<9999) {
@@ -259,6 +260,34 @@ int main(string[] args)  {
                     }
                     break;
             
+            // Dumb unofficial commands - test the lamp with shade in bathroom
+            case "green":
+                    bulb29.set_color(new Color(0.5,0.28,0.45));
+                    break;
+            case "red":
+                    bulb29.set_color(new Color(0.5,0.6,0.33));
+                    break;
+            case "white":
+                    bulb29.set_color(new Color(0.8,0.38,0.38));
+                    break;
+            case "gray":
+                    bulb29.set_color(new Color(0.25,0.38,0.38));
+                    break;
+            case "darkblue":
+                    bulb29.set_color(new Color(0.10,0.21,0.20));
+                    break;
+            case "scent":
+                    bulb29.set_color(new Color(0.7,0.44,0.32));
+                    break;
+            case "yellow":
+                    bulb29.set_color(new Color(1.0,0.48,0.45));
+                    break;
+            case "off":
+                    bulb29.turn(BulbState.OFF);
+                    break;
+            case "on":
+                    bulb29.turn(BulbState.ON);
+                    break;
             case "quit": 
                     running=false;
                     break;
