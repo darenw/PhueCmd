@@ -9,7 +9,7 @@ import std.conv;
 import std.json;
 import std.net.curl;
 import std.math.rounding;
-
+import std.uni;
 
 alias hubindex = ushort;
 alias bulbindex = ushort;
@@ -63,6 +63,12 @@ class Hub  {
         auto stuff = get(myurl);
         writeln(stuff);
     }
+    
+    
+    void find_bulbs()   {
+        // DANGER! Does not check if bulb already in bulbs[]
+        
+    }
 }
 
 
@@ -82,6 +88,7 @@ class Bulb {
     int bulbnum;        // number assigned by hub
     
     this(hubindex ihub, string name0, string shortname0, int bulbnum0) {
+        /*TODO*/ // check if any existing bulb has same bulbnum
         imyhub = ihub;
         name=name0;
         shortname=shortname0;
@@ -196,17 +203,18 @@ class Color   {
 
 int main(string[] args)  {
     writeln("START");
+    hubindex icurrenthub = 0;   // none
     
     // Hardcoded for my actual hardware at this time
     add_hub("00:17:88:21:8A:2E",
              "192.168.11.41",
              "78g2lrMNHZHZFozjDJ7z7lneQhl8guZpzssU0HIr",
-             "Hub1537-2016",  "h1537"
+             "Hub1-1537-2016",  "hub1"
              );
     add_hub("00:17:88:4D:97:4D",
              "192.168.11.10",
              "VHQitrMnCUvVb4YLmuTmYQvO54ZjUgihgSJGKTFy",
-             "Hub1707-2017",   "h1707"
+             "Hub2-1707-2017",   "h2"
              );
     
     hubindex ihub1 = 0;   // the functional one, controls two bulbs
@@ -218,8 +226,48 @@ int main(string[] args)  {
     
     Bulb bulb29 = new Bulb(0, "Bedroom Lamp", "Bedrm", 29);
     writeln("YEEE!!!");
-    bulb29.set_color(new Color(GREEN));
+    bulb29.set_color(new Color(0.3,0.4,0.2));
     
-    writeln("END");
+    bool running = true;
+    while (running)  {
+        if (icurrenthub<9999) {
+            writef("%s phuecmd> ", hubs[icurrenthub].shortname);
+        }
+        else {
+            write("phuecmd> ");
+        }
+        
+        auto cmdline = readln().chomp.strip;
+        auto tokens = cmdline.split!isWhite;
+        if (cmdline.length==0)  continue;
+        writeln("CMDLINE ", cmdline);
+        
+        switch (tokens[0])  {
+            case "find":
+                    if (tokens.length<2) {
+                        writeln("Find what?");
+                    }
+                    switch (tokens[1]) {
+                        case "bulbs":
+                            if (!hubs[icurrenthub]) break;
+                            hubs[icurrenthub].find_bulbs();
+                            break;
+                        case "hubs":
+                            goto default;
+                        default:
+                            { }
+                    }
+                    break;
+            
+            case "quit": 
+                    running=false;
+                    break;
+                    
+            default:
+                writefln("%s not implement or is gibberish", cmdline);
+        }
+    }
+    
+    writeln("BYE!");
     return 0;
 }
