@@ -206,7 +206,6 @@ CIEColor blackbody(float temp)   {
 		x = ((-3.0258469*m + 2.10703790)*m + 0.2226347)*m + 0.240390;
 		y = (( 3.0817580*x - 5.87338670)*x + 3.75112997)*x - 0.37001483;
 	}
-    writefln("   : temp %7.1f  x=%6.3f y=%6.3f ", temp,x,y);
 	return CIEColor(1.0, x, y);
 }
 
