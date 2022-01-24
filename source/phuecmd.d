@@ -8,7 +8,7 @@ import std.format;
 import std.conv;
 import std.json;
 import std.net.curl;
-import std.math.rounding;
+import std.math;
 import std.uni;
 
 alias hubindex = ushort;
@@ -20,6 +20,7 @@ alias paletteindex = ushort;
 Hub[] hubs;
 Bulb[] bulbs;
 Group[] groups;
+
 
 
 
@@ -113,9 +114,7 @@ class Bulb {
 
     void set_color(Color color)   {
         int bri = cast(int)floor(0.5+255*color.cie.L);
-        writeln("SET_COLOR bri=", bri);
         string cmd = format(`{"bri":%d,"xy":[%.3f,%.3f]}`, bri,  color.cie.x, color.cie.y);
-        writeln("CMD:  ", cmd);
         send( cmd);
     }
     
@@ -162,9 +161,8 @@ struct CIEColor  {
     float L,x,y;
 }
 
-immutable CIEColor WHITE = {1.0f, 0.333, 0.333};  // placeholder 
-immutable CIEColor WHITE50 = {0.5f, 0.333, 0.333};  // placeholder 
-immutable CIEColor GREEN  = { 0.8, 0.27, 0.37};
+
+
 
 class Color   {
     string name;
@@ -195,11 +193,31 @@ class Color   {
     }
     
     Color mix(float percent_toward, Color target) const  {
-        return new Color(WHITE50);
+        return new Color(1.0, 0.33, 0.3);// dumb place-holder /*TODO*/
     }
 }
 
 
+struct NamedColorDef  {
+    CIEColor cie;
+    string name;  
+}
+
+NamedColorDef[] named_colors = [
+    { cie:{1.0, 0.333, 0.333}, name:"EqualEnergyWhite"},
+    { cie:{1.0, 0.333, 0.333}, name:"EqualEnergyWhite"}
+];
+
+
+
+void LoopAllBulbs( )   {
+    for (bulbindex ib=0; ib<255; ib++)  {
+        float br = 0.7*0.29*sin(1.0*ib);
+        float x = 0.15 + 0.44*(0.5+0.5*sin(1.0*ib*ib));
+        float y = 0.08 + 0.45*(0.5+0.5*cos(ib*ib*2.2));
+        bulbs[ib].set_color(new Color(br,x,y));
+    }
+}
 
 
 int main(string[] args)  {
@@ -228,11 +246,16 @@ int main(string[] args)  {
     
     // Hardcoded scaffolding, define one bulb for immediate testing
     Bulb bulb29 = new Bulb(0, "Bedroom Lamp", "Bedrm", 29);
-     
+    Bulb bulb31 = new Bulb(0, "Orange Desklamp", "DeskO", 31);
+    bulbindex icurrentbulb = 0;
+    
+    
     bool running = true;
     while (running)  {
         if (icurrenthub<9999) {
-            writef("%s phuecmd> ", hubs[icurrenthub].shortname);
+            writef("%s %d phuecmd> ", 
+                hubs[icurrenthub].shortname,
+                bulbs[icurrentbulb].bulbnum);
         }
         else {
             write("phuecmd> ");
@@ -241,7 +264,6 @@ int main(string[] args)  {
         auto cmdline = readln().chomp.strip;
         auto tokens = cmdline.split!isWhite;
         if (cmdline.length==0)  continue;
-        writeln("CMDLINE ", cmdline);
         
         switch (tokens[0])  {
             case "find":
@@ -260,34 +282,50 @@ int main(string[] args)  {
                     }
                     break;
             
+            case "B29":
+                    icurrentbulb=0;
+                    goto bulb_report;
+            case "B31":
+                    icurrentbulb=1;
+                    bulb_report:
+                    writefln("focused on bulb %s num %d", 
+                        bulbs[icurrentbulb].shortname, 
+                        bulbs[icurrentbulb].bulbnum);
+                    break;
+                    
             // Dumb unofficial commands - test the lamp with shade in bathroom
             case "green":
-                    bulb29.set_color(new Color(0.5,0.28,0.45));
+                    bulbs[icurrentbulb].set_color(new Color(0.5,0.28,0.45));
                     break;
             case "red":
-                    bulb29.set_color(new Color(0.5,0.6,0.33));
+                    bulbs[icurrentbulb].set_color(new Color(0.5,0.6,0.33));
                     break;
             case "white":
-                    bulb29.set_color(new Color(0.8,0.38,0.38));
+                    bulbs[icurrentbulb].set_color(new Color(0.8,0.38,0.38));
                     break;
             case "gray":
-                    bulb29.set_color(new Color(0.25,0.38,0.38));
+                    bulbs[icurrentbulb].set_color(new Color(0.25,0.38,0.38));
                     break;
             case "darkblue":
-                    bulb29.set_color(new Color(0.10,0.21,0.20));
+                    bulbs[icurrentbulb].set_color(new Color(0.10,0.21,0.20));
                     break;
             case "scent":
-                    bulb29.set_color(new Color(0.7,0.44,0.32));
+                    bulbs[icurrentbulb].set_color(new Color(0.7,0.44,0.32));
                     break;
             case "yellow":
-                    bulb29.set_color(new Color(1.0,0.48,0.45));
+                    bulbs[icurrentbulb].set_color(new Color(1.0,0.48,0.45));
                     break;
             case "off":
-                    bulb29.turn(BulbState.OFF);
+                    bulbs[icurrentbulb].turn(BulbState.OFF);
                     break;
             case "on":
-                    bulb29.turn(BulbState.ON);
+                    bulbs[icurrentbulb].turn(BulbState.ON);
                     break;
+                    
+            case "loop":
+                    LoopAllBulbs();
+                    break;
+                    
             case "quit": 
                     running=false;
                     break;
