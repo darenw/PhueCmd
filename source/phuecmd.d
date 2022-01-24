@@ -177,17 +177,9 @@ class Color   {
     
     this(CIEColor given)  {
         cie = given;
-        writeln("Color CONSTRUCT ", given.L,given.x, cie.L, cie.x);
     }
     
-    
-    this(float L, float temperature) {   // Black body white light
-        cie.L = L;
-        cie.x = 0.333;
-        cie.y = 0.333; /*TODO*/  // palce-holder until i look up the old good code
-    }
-    
-    
+        
     Color create_brighter(float brightnes_change_percent)  const {
         return new Color(cie); 
     }
@@ -198,15 +190,46 @@ class Color   {
 }
 
 
+CIEColor blackbody(float temp)   {
+	// https://en.wikipedia.org/wiki/Planckian_locus 
+	float m = 1000.0/temp;
+	float x,y;
+	
+	if (temp<=4000.0)  {
+		x = ((-0.2661239*m - 0.2343589)*m + 0.8776956)*m + 0.179910;
+		if (temp<2222.0)  
+			y = ((-1.1063814*x - 1.34811020)*x + 2.18555832)*x - 0.20219683;
+		else
+			y = ((-0.9549476*x - 1.37418593)*x + 2.09137015)*x - 0.16748867;
+		
+	}else{
+		x = ((-3.0258469*m + 2.10703790)*m + 0.2226347)*m + 0.240390;
+		y = (( 3.0817580*x - 5.87338670)*x + 3.75112997)*x - 0.37001483;
+	}
+    writefln("   : temp %7.1f  x=%6.3f y=%6.3f ", temp,x,y);
+	return CIEColor(1.0, x, y);
+}
+
+
+
+
+
 struct NamedColorDef  {
     CIEColor cie;
     string name;  
 }
 
+
+
+// Define some handy "obvious" colors, just to have some useful quick
+// functionality before dealing with palettes, sequences
+// Note: intent with names is to be case-don't-matter, but
+// print out colors as camel case
 NamedColorDef[] named_colors = [
     { cie:{1.0, 0.333, 0.333}, name:"EqualEnergyWhite"},
-    { cie:{1.0, 0.333, 0.333}, name:"EqualEnergyWhite"}
+    { cie:{0.8, 0.333, 0.333}, name:"EqualEnergyWhite"}
 ];
+
 
 
 
@@ -269,6 +292,7 @@ int main(string[] args)  {
             case "find":
                     if (tokens.length<2) {
                         writeln("Find what?");
+                        continue;
                     }
                     switch (tokens[1]) {
                         case "bulbs":
@@ -282,6 +306,20 @@ int main(string[] args)  {
                     }
                     break;
             
+            case "forget":
+                    if (tokens.length<2)  {
+                        writeln("Forget what? bulbs, hubs, palette...?");
+                        continue;
+                    }
+                    switch (tokens[1])  {
+                        case "bulbs":
+                                bulbs.length=0;
+                                break;
+                        default:
+                                continue;
+                    }
+                    break;
+                    
             case "B29":
                     icurrentbulb=0;
                     goto bulb_report;
@@ -292,34 +330,30 @@ int main(string[] args)  {
                         bulbs[icurrentbulb].shortname, 
                         bulbs[icurrentbulb].bulbnum);
                     break;
-                    
-            // Dumb unofficial commands - test the lamp with shade in bathroom
-            case "green":
-                    bulbs[icurrentbulb].set_color(new Color(0.5,0.28,0.45));
-                    break;
-            case "red":
-                    bulbs[icurrentbulb].set_color(new Color(0.5,0.6,0.33));
-                    break;
-            case "white":
-                    bulbs[icurrentbulb].set_color(new Color(0.8,0.38,0.38));
-                    break;
-            case "gray":
-                    bulbs[icurrentbulb].set_color(new Color(0.25,0.38,0.38));
-                    break;
-            case "darkblue":
-                    bulbs[icurrentbulb].set_color(new Color(0.10,0.21,0.20));
-                    break;
-            case "scent":
-                    bulbs[icurrentbulb].set_color(new Color(0.7,0.44,0.32));
-                    break;
-            case "yellow":
-                    bulbs[icurrentbulb].set_color(new Color(1.0,0.48,0.45));
-                    break;
             case "off":
                     bulbs[icurrentbulb].turn(BulbState.OFF);
                     break;
             case "on":
                     bulbs[icurrentbulb].turn(BulbState.ON);
+                    break;
+                    
+            case "2000":
+                    bulbs[icurrentbulb].set_color(new Color(blackbody(2000)));
+                    break;
+            case "3000":
+                    bulbs[icurrentbulb].set_color(new Color(blackbody(3000)));
+                    break;
+            case "4000":
+                    bulbs[icurrentbulb].set_color(new Color(blackbody(4000)));
+                    break;
+            case "5000":
+                    bulbs[icurrentbulb].set_color(new Color(blackbody(5000)));
+                    break;
+            case "6000":
+                    bulbs[icurrentbulb].set_color(new Color(blackbody(6000)));
+                    break;
+            case "7000":
+                    bulbs[icurrentbulb].set_color(new Color(blackbody(7000)));
                     break;
                     
             case "loop":
