@@ -55,7 +55,7 @@ class Hub  {
     }
     
     void describe_self_one_line()   {
-        writefln("H%d  %s %s", myindex, ipaddr,  macaddr);
+        writefln("hub[%d] %s %s  %s (%s)", myindex, ipaddr,  macaddr, name, shortname);
     }
     
     
@@ -77,8 +77,33 @@ class Hub  {
         writeln(stuff);
     }
     
+    void find_new_physical_bulbs()  {
+        writeln("Requesting search for new bulbs...");
+        
+        // An http POST with no body triggers hub into seeking new bulbs
+        auto z = post( myurl ~ "lights", "" );
+        Thread.sleep( dur!("msecs")( 600 ) );
+        
+        // Obtain list of newly found bulbs with GET lights/new
+        auto newbulbs = JSONValue( get( myurl ~ "lights/new") );
+        
+        
+    }    
     
-    void find_bulbs()   {
+    void forget_all_physical_bulbs()  {
+        auto spewage = get( myurl ~ "lights/");
+        JSONValue lightslist = parseJSON(spewage);
+        foreach (string bkey, JSONValue binfo; lightslist)  {
+            int bnum = bkey.to!int;
+            writef("deleting bulb num %s from hub[%s]... ", bnum,  myindex);
+            del( myurl ~ "lights/" ~ bkey);
+            writefln("gone!");
+        }
+
+    }
+
+    
+    void read_known_bulbs()   {
         // DANGER! Does not check if bulb already in bulbs[]
         auto spewage = get( myurl ~ "lights/");
         JSONValue lightslist = parseJSON(spewage);
@@ -355,6 +380,13 @@ void list_all_bulbs()    {
 }
 
 
+void refresh_bulbs_list() {
+    bulbs.length=0;
+    foreach (hub; hubs)  {
+        hub.read_known_bulbs();
+    }
+}
+
 
 int main(string[] args)  {
     writeln("START");
@@ -383,10 +415,6 @@ int main(string[] args)  {
     
     
     // Hardcoded scaffolding, define one bulb for immediate testing
-    Bulb bulb29 = new Bulb(0, "Bedroom Lamp", "Bedrm", 29);
-    bulb29.descr = "The one with the big shade";
-    Bulb bulb31 = new Bulb(0, "Orange Desklamp", "DeskO", 31);
-    bulb31.descr = "Desk lamp next to guitar amp";
     
     bulbindex icurrentbulb = 0;
     
@@ -407,6 +435,8 @@ int main(string[] args)  {
         auto cmdline = readln().chomp.strip;
         auto tokens = cmdline.split!isWhite;
         if (cmdline.length==0)  continue;
+        
+        refresh_bulbs_list();
         
         switch (tokens[0])  {
             
@@ -430,7 +460,10 @@ int main(string[] args)  {
                     switch (tokens[1]) {
                         case "bulbs":
                             if (!hubs[icurrenthub]) break;
-                            hubs[icurrenthub].find_bulbs();
+                            hubs[icurrenthub].find_new_physical_bulbs();
+                            refresh_bulbs_list();
+                            list_all_bulbs();
+                            writeln("LISTED KNOWN BULBS");
                             break;
                         case "hubs":
                             goto default;
@@ -445,7 +478,10 @@ int main(string[] args)  {
                         continue;
                     }
                     switch (tokens[1])  {
-                        case "bulbs":
+                        case "all-bulbs":
+                                foreach (hub; hubs)  {
+                                    hub.forget_all_physical_bulbs();
+                                }
                                 bulbs.length=0;
                                 break;
                         default:
@@ -453,10 +489,10 @@ int main(string[] args)  {
                     }
                     break;
                     
-            case "B29":
+            case "B0":
                     icurrentbulb=0;
                     goto bulb_report;
-            case "B31":
+            case "B1":
                     icurrentbulb=1;
                     bulb_report:
                     writefln("focused on bulb %s num %d", 
@@ -483,6 +519,17 @@ int main(string[] args)  {
                     animate_color_by_bulbindex();
                     break;
                     
+            case "forget-all":
+                    hubs[icurrenthub].forget_all_physical_bulbs();
+                    break;
+                    
+            case "create-hardcoded-bulbs":
+                    Bulb bulb29 = new Bulb(0, "Bedroom Lamp", "Bedrm", 29);
+                    bulb29.descr = "The one with the big shade";
+                    Bulb bulb31 = new Bulb(0, "Orange Desklamp", "DeskO", 31);
+                    bulb31.descr = "Desk lamp next to guitar amp";
+                    break;
+                    
             case "quit": 
                     running=false;
                     break;
@@ -506,6 +553,7 @@ int main(string[] args)  {
                         }
                     }
                 }else if (tokens[0] in named_color_dictionary) {
+                    if (!bulbs.length) continue;
                     bulbs[icurrentbulb].set_color(new Color(named_color_dictionary[tokens[0]]));
                     
                 }else{
