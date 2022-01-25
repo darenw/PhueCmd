@@ -1,15 +1,21 @@
 // PhueCmd  main
 // THIS INITIAL WRITING: hackwork! hardcoded, classes not put into own files.
 
-import std.algorithm.searching;
+
 import std.stdio;
 import std.string;
 import std.format;
+
+import std.ascii; 
+//import std.uni;
+//https://forum.dlang.org/post/dfpyivbwueemnyadknco@forum.dlang.org
+
 import std.conv;
+import std.math;
+import std.algorithm.searching;
 import std.json;
 import std.net.curl;
-import std.math;
-import std.uni;
+
 
 alias hubindex = ushort;
 alias bulbindex = ushort;
@@ -46,6 +52,10 @@ class Hub  {
     ~this() {
     }
     
+    void describe_self_one_line()   {
+        writefln("H%d  %s %s", myindex, ipaddr,  macaddr);
+    }
+    
     
     void send_bulb_settings(bulbindex ibulb, JSONValue cmd)  {
         string b = format("lights/%d/state", bulbs[ibulb].bulbnum);
@@ -80,14 +90,26 @@ void add_hub(string mac0, string ip0, string pw0, string name0, string shortname
 }
 
 
+void list_all_hubs()  {
+    foreach (Hub hub; hubs)  {
+        hub.describe_self_one_line();
+    }
+}
+
+
 
 enum BulbState { OFF, ON }
 
 class Bulb {
     bulbindex myindex;
     hubindex  imyhub;
-    string name, shortname;
+    string name, shortname, descr;
     int bulbnum;        // number assigned by hub
+    CIEColor latest_color;
+    HSVColor latest_color_hsv;
+    float    latest_color_temp;
+    BulbState     latest_onoff_state;
+    
     
     this(hubindex ihub, string name0, string shortname0, int bulbnum0) {
         /*TODO*/ // check if any existing bulb has same bulbnum
@@ -99,10 +121,17 @@ class Bulb {
         bulbs ~= this;
     }
     
+    void describe_self_one_line()   {
+        writefln("B%d hnum=%d  %s %s", myindex, bulbnum, shortname, descr);
+    }
+    
     
     void turn(BulbState desired)   {
         send( (desired==BulbState.ON)? "{\"on\":true}" : "{\"on\":false}" );
+        // if successful, 
+            latest_onoff_state = desired;
     }
+    
     
     void send(string jsoncmd)  {
         hubs[imyhub].send_bulb_settings(myindex, jsoncmd);
@@ -116,6 +145,10 @@ class Bulb {
         int bri = cast(int)floor(0.5+255*color.cie.L);
         string cmd = format(`{"bri":%d,"xy":[%.3f,%.3f]}`, bri,  color.cie.x, color.cie.y);
         send( cmd);
+    }
+    
+    void set_color(CIEColor cie)  {
+        set_color(new Color(cie));
     }
     
     void set_color_BAD(Color color)  {
@@ -161,7 +194,13 @@ struct CIEColor  {
     float L,x,y;
 }
 
+immutable CIEColor MAXWHITE   = {1.0, 0.351, 0.350};
+immutable CIEColor DIMGRAY    = {0.1, 0.351, 0.350};
+immutable CIEColor ZEROBRIGHT = {0.0, 0.333, 0.333};
+immutable CIEColor MAXGREEN   = {1.0, 0.300, 0.59};
 
+immutable min_color_temp =  1400;  // ?? min somewhere around here
+immutable max_color_temp = 20000;  // another guess. no appearance change beyond this.
 
 
 class Color   {
@@ -211,8 +250,6 @@ CIEColor blackbody(float temp)   {
 
 
 
-
-
 struct NamedColorDef  {
     CIEColor cie;
     string name;  
@@ -221,19 +258,58 @@ struct NamedColorDef  {
 
 
 // Define some handy "obvious" colors, just to have some useful quick
-// functionality before dealing with palettes, sequences
+// functionality before dealing with palettes, sequences, good design.
 // Note: intent with names is to be case-don't-matter, but
 // print out colors as camel case
 NamedColorDef[] named_colors = [
-    { cie:{1.0, 0.333, 0.333}, name:"EqualEnergyWhite"},
-    { cie:{0.8, 0.333, 0.333}, name:"EqualEnergyWhite"}
+    { cie:{1.0, 0.333, 0.333},  name:"equal"},  // Equal Energy White
+    { cie:{1.00, 0.381, 0.370},   name:"white"},
+    { cie:{0.25, 0.381, 0.380},   name:"gray"},
+    { cie:{1.00, 0.482, 0.440},   name:"yellow"},
+    { cie:{0.20, 0.524, 0.395},   name:"brown"},
+    { cie:{0.75, 0.280, 0.451},   name:"green"},
+    { cie:{0.76, 0.215, 0.196},   name:"blue"},
+    { cie:{0.60, 0.251, 0.115},   name:"violet"},
+    { cie:{0.70, 0.321, 0.12},   name:"purple"},
+    { cie:{0.83, 0.381, 0.13},   name:"magenta"},
+    { cie:{0.70, 0.441, 0.320},   name:"scent"},
+    { cie:{0.50, 0.505, 0.255},   name:"coldred"},
+    { cie:{0.81, 0.601, 0.320},   name:"red"},
+    { cie:{1.00, 0.262, 0.300},   name:"sky"},
+    { cie:{0.16, 0.386, 0.430},   name:"olive"},
+    { cie:{0.91, 0.524, 0.399},   name:"orange"},
 ];
 
 
 
+CIEColor[string] named_color_dictionary;
 
-void LoopAllBulbs( )   {
-    for (bulbindex ib=0; ib<255; ib++)  {
+void init_named_colors() {
+    if (named_color_dictionary.length==0)  {
+        foreach (NamedColorDef z; named_colors)  {
+            named_color_dictionary[z.name]=z.cie;
+        }
+    }    
+}
+
+
+
+CIEColor[10] color_code_colors = [
+    /* 0 */  { 0.10, 0.33, 0.33},
+    /* 1 */  { 0.26, 0.54, 0.39},
+    /* 2 */  { 0.70, 0.63, 0.32},
+    /* 3 */  { 0.87, 0.55, 0.40},
+    /* 4 */  { 0.98, 0.48, 0.46},
+    /* 5 */  { 0.70, 0.30, 0.48},
+    /* 6 */  { 0.71, 0.21, 0.21},
+    /* 7 */  { 0.64, 0.22, 0.12},
+    /* 8 */  { 0.35, 0.33, 0.33},
+    /* 9 */  { 0.98, 0.33, 0.33},
+];
+
+
+void animate_color_by_bulbindex( )   {
+    for (bulbindex ib=0; ib<bulbs.length; ib++)  {
         float br = 0.7*0.29*sin(1.0*ib);
         float x = 0.15 + 0.44*(0.5+0.5*sin(1.0*ib*ib));
         float y = 0.08 + 0.45*(0.5+0.5*cos(ib*ib*2.2));
@@ -242,8 +318,16 @@ void LoopAllBulbs( )   {
 }
 
 
+void list_all_bulbs()    {
+    foreach (Bulb bulb; bulbs)  {
+        bulb.describe_self_one_line();
+    }
+}
+
 int main(string[] args)  {
     writeln("START");
+    init_named_colors();
+    
     hubindex icurrenthub = 0;   // none
     
     // Hardcoded for my actual hardware at this time
@@ -268,16 +352,21 @@ int main(string[] args)  {
     
     // Hardcoded scaffolding, define one bulb for immediate testing
     Bulb bulb29 = new Bulb(0, "Bedroom Lamp", "Bedrm", 29);
+    bulb29.descr = "The one with the big shade";
     Bulb bulb31 = new Bulb(0, "Orange Desklamp", "DeskO", 31);
+    bulb31.descr = "Desk lamp next to guitar amp";
+    
     bulbindex icurrentbulb = 0;
     
     
     bool running = true;
     while (running)  {
-        if (icurrenthub<9999) {
-            writef("%s %d phuecmd> ", 
+        if (icurrenthub<9999 && hubs.length>=1 && bulbs.length>=1) {
+            writef("H%d %s, B%d %s: phuecmd> ", 
+                hubs[icurrenthub].myindex,
                 hubs[icurrenthub].shortname,
-                bulbs[icurrentbulb].bulbnum);
+                bulbs[icurrentbulb].bulbnum,
+                bulbs[icurrentbulb].shortname);
         }
         else {
             write("phuecmd> ");
@@ -288,6 +377,19 @@ int main(string[] args)  {
         if (cmdline.length==0)  continue;
         
         switch (tokens[0])  {
+            
+            case "list": 
+                    if (tokens.length<2)  {
+                        writeln("List what? bulbs hubs palettes ...?");
+                    } else {
+                        switch (tokens[1]) {
+                            case "bulbs": list_all_bulbs(); break;
+                            case "hubs":  list_all_hubs();  break;
+                            default: continue;
+                        }
+                    }
+                    break;
+                    
             case "find":
                     if (tokens.length<2) {
                         writeln("Find what?");
@@ -336,27 +438,9 @@ int main(string[] args)  {
                     bulbs[icurrentbulb].turn(BulbState.ON);
                     break;
                     
-            case "2000":
-                    bulbs[icurrentbulb].set_color(new Color(blackbody(2000)));
-                    break;
-            case "3000":
-                    bulbs[icurrentbulb].set_color(new Color(blackbody(3000)));
-                    break;
-            case "4000":
-                    bulbs[icurrentbulb].set_color(new Color(blackbody(4000)));
-                    break;
-            case "5000":
-                    bulbs[icurrentbulb].set_color(new Color(blackbody(5000)));
-                    break;
-            case "6000":
-                    bulbs[icurrentbulb].set_color(new Color(blackbody(6000)));
-                    break;
-            case "7000":
-                    bulbs[icurrentbulb].set_color(new Color(blackbody(7000)));
-                    break;
                     
-            case "loop":
-                    LoopAllBulbs();
+            case "num":
+                    animate_color_by_bulbindex();
                     break;
                     
             case "quit": 
@@ -364,7 +448,25 @@ int main(string[] args)  {
                     break;
                     
             default:
-                writefln("%s not implement or is gibberish", cmdline);
+                if (isDigit(tokens[0][0]))  {
+                    if (tokens[0].length==1) {
+                        int n = tokens[0].to!int;
+                        bulbs[icurrentbulb].set_color(color_code_colors[n]);
+                    } else {
+                        float temp = tokens[0].to!float;
+                        if (temp>min_color_temp && temp<max_color_temp) {
+                            bulbs[icurrentbulb].set_color(new Color(blackbody(temp)));
+                        }else{
+                            writefln("Temp %.1f out of range. Must have %.0f < temp < %.0f", 
+                                        temp, min_color_temp, max_color_temp);
+                        }
+                    }
+                }else if (tokens[0] in named_color_dictionary) {
+                    bulbs[icurrentbulb].set_color(new Color(named_color_dictionary[tokens[0]]));
+                    
+                }else{
+                    writefln("%s not implement or is gibberish", cmdline);
+                }
         }
     }
     
