@@ -24,12 +24,19 @@ H1       focused on Hub #1
 B35      focus on bulb 35
 
 
+???
 HH       all hubs
 BB       all bulbs
 
+.       stop context 
 
-list HH     list all hubs
-list BB     list all bulbs
+
+
+list all hubs  
+list HH        -- list all hubs
+
+
+list BB        -- list all bulbs for all hubs or just for current hub
 list GG     list all bulb groups
    ... etc ...
 
@@ -110,10 +117,12 @@ B16 B15 20%V     bulb #16: be same as bulb 15 nudged 20% toward pure violet
 RESET, DIAGNOSE, VERIFY, CLEARING, FORGETTING STUFF 
 
 
-show H2           -- blinks all lights attached to hub #2
-show Bkitchentop  -- blinks bulb named "kitchentop"
-show ...          -- etc.
+blink H2           -- blinks all lights attached to hub #2
+blink Bkitchentop  -- blinks bulb named "kitchentop"
+blink ...          -- etc.
 stop              -- stop blinking. also, stops when new 'show' cmd 
+
+
 
 all off           -- turns off all bulbs
  		         (remembers all bulb colors, place in show seq, ..)
@@ -121,6 +130,16 @@ all on     	  -- go back to as you were before "all off"
 all on white      -- turns on all bulbs all hubs, specified color 
                          (default 70%maxwhite ??)
 all H3 50%green   -- turns on all bulbs only on hub #3 to half-bright green
+
+forget all hubs   -- total amnesia,  
+forget hub3        
+find  hubs       -- runs nmap to find all Philips Hue hubs on LAN
+find  hubs eno1       you may need to provide ethernet device name
+
+forget bulbs     -- delete all Bulbs for current hub
+forget all bulbs -- delete Bulbs for all hubs known
+find bulbs       -- has hub report all bulbs it knows about, creates Bulbs
+
 
 
 

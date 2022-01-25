@@ -81,7 +81,17 @@ class Hub  {
     void find_bulbs()   {
         // DANGER! Does not check if bulb already in bulbs[]
         auto spewage = get( myurl ~ "lights/");
-        
+        JSONValue lightslist = parseJSON(spewage);
+        foreach (string bkey, JSONValue binfo; lightslist)  {
+            int bnum = bkey.to!int;
+            string boringname = format("H%dB%d", myindex, bnum);
+            writefln("FOUND BULB: H=%d BN=%d %s %s %s", myindex, bnum, 
+                lightslist[bkey]["state"],
+                lightslist[bkey]["modelid"],
+                lightslist[bkey]["name"]
+                );
+            Bulb b = new Bulb(myindex, boringname, boringname, bnum);
+        }
     }
 }
 
@@ -91,13 +101,11 @@ void add_hub(string mac0, string ip0, string pw0, string name0, string shortname
     hubs[$-1] = new Hub(mac0,ip0,pw0,name0,shortname0);
 }
 
-
 void list_all_hubs()  {
     foreach (Hub hub; hubs)  {
         hub.describe_self_one_line();
     }
 }
-
 
 
 enum BulbState { OFF, ON }
@@ -112,7 +120,6 @@ class Bulb {
     float    latest_color_temp;
     BulbState     latest_onoff_state;
     
-    
     this(hubindex ihub, string name0, string shortname0, int bulbnum0) {
         /*TODO*/ // check if any existing bulb has same bulbnum
         imyhub = ihub;
@@ -124,7 +131,7 @@ class Bulb {
     }
     
     void describe_self_one_line()   {
-        writefln("B%d hnum=%d  %s %s", myindex, bulbnum, shortname, descr);
+        writefln("B%d hnum=%d  %s %s", imyhub, bulbnum, shortname, descr);
     }
     
     
@@ -347,6 +354,8 @@ void list_all_bulbs()    {
     }
 }
 
+
+
 int main(string[] args)  {
     writeln("START");
     init_named_colors();
@@ -454,6 +463,14 @@ int main(string[] args)  {
                         bulbs[icurrentbulb].shortname, 
                         bulbs[icurrentbulb].bulbnum);
                     break;
+                    
+            case "hub1":
+                    icurrenthub = ihub1;
+                    break;
+            case "hub2":
+                    icurrenthub = ihub2;
+                    break;
+                    
             case "off":
                     bulbs[icurrentbulb].turn(BulbState.OFF);
                     break;
