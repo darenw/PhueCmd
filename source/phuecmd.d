@@ -15,6 +15,8 @@ import std.math;
 import std.algorithm.searching;
 import std.json;
 import std.net.curl;
+//import std.thread;
+import core.thread;
 
 
 alias hubindex = ushort;
@@ -277,9 +279,8 @@ NamedColorDef[] named_colors = [
     { cie:{0.81, 0.601, 0.320},   name:"red"},
     { cie:{1.00, 0.262, 0.300},   name:"sky"},
     { cie:{0.16, 0.386, 0.430},   name:"olive"},
-    { cie:{0.91, 0.524, 0.399},   name:"orange"},
+    { cie:{0.91, 0.584, 0.379},   name:"orange"},
 ];
-
 
 
 CIEColor[string] named_color_dictionary;
@@ -293,12 +294,11 @@ void init_named_colors() {
 }
 
 
-
 CIEColor[10] color_code_colors = [
     /* 0 */  { 0.10, 0.33, 0.33},
     /* 1 */  { 0.26, 0.54, 0.39},
     /* 2 */  { 0.70, 0.63, 0.32},
-    /* 3 */  { 0.87, 0.55, 0.40},
+    /* 3 */  { 0.87, 0.56, 0.39},
     /* 4 */  { 0.98, 0.48, 0.46},
     /* 5 */  { 0.70, 0.30, 0.48},
     /* 6 */  { 0.71, 0.21, 0.21},
@@ -308,12 +308,35 @@ CIEColor[10] color_code_colors = [
 ];
 
 
-void animate_color_by_bulbindex( )   {
+void dim_all_bulbs() {
     for (bulbindex ib=0; ib<bulbs.length; ib++)  {
-        float br = 0.7*0.29*sin(1.0*ib);
-        float x = 0.15 + 0.44*(0.5+0.5*sin(1.0*ib*ib));
-        float y = 0.08 + 0.45*(0.5+0.5*cos(ib*ib*2.2));
-        bulbs[ib].set_color(new Color(br,x,y));
+        bulbs[ib].set_color(new Color(ZEROBRIGHT));
+    }
+}
+
+void colorize_bulbs(int idigit, bool wantbulbindex)  {
+    Thread.sleep( dur!("msecs")( 300 ) );    
+    dim_all_bulbs();
+    for (bulbindex ib=0; ib<bulbs.length; ib++)  {
+        ushort n = to!ushort( (wantbulbindex)? bulbs[ib].myindex : bulbs[ib].bulbnum );
+        ushort[3] digit;
+        digit[2]=n/100;
+        ushort r = to!ushort( n-100*digit[2] );
+        digit[1]=r/10;
+        digit[0]= to!ushort( r-10*digit[1] );
+        
+        bulbs[ib].set_color(new Color(color_code_colors[digit[idigit]]));
+    }
+    Thread.sleep( dur!("msecs")( 900 ) );
+}
+
+
+void animate_color_by_bulbindex( )   {
+    colorize_bulbs(2,false);
+    colorize_bulbs(1,false);
+    colorize_bulbs(0,false);
+    for (bulbindex ib=0; ib<bulbs.length; ib++)  {
+        bulbs[ib].set_color(new Color(ZEROBRIGHT));
     }
 }
 
@@ -445,6 +468,10 @@ int main(string[] args)  {
                     
             case "quit": 
                     running=false;
+                    break;
+                    
+            case "dim":
+                    dim_all_bulbs();
                     break;
                     
             default:
