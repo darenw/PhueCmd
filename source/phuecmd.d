@@ -48,14 +48,17 @@ class Hub  {
         shortname=shortname0;
         myurl = format("http://%s/api/%s/", 
                         ipaddr, password);
-        writeln("New Hub!  url = ", myurl);
+        myindex = cast(hubindex)hubs.length;
+        hubs ~= this;        
+        writefln("Using hub[%d]  %s  %s  %s ", myindex, ipaddr, macaddr, name);
     }
     
     ~this() {
     }
     
     void describe_self_one_line()   {
-        writefln("hub[%d] %s %s  %s (%s)", myindex, ipaddr,  macaddr, name, shortname);
+        writefln("hub[%d] %s %s  %s (%s)", 
+               myindex, ipaddr,  macaddr, name, shortname);
     }
     
     
@@ -103,28 +106,28 @@ class Hub  {
     }
 
     
-    void read_known_bulbs()   {
+    void add_all_known_to_bulbs_list()   {
         // DANGER! Does not check if bulb already in bulbs[]
         auto spewage = get( myurl ~ "lights/");
         JSONValue lightslist = parseJSON(spewage);
         foreach (string bkey, JSONValue binfo; lightslist)  {
             int bnum = bkey.to!int;
+            JSONValue bulbinfo = lightslist[bkey];
             string boringname = format("H%dB%d", myindex, bnum);
-            writefln("FOUND BULB: H=%d BN=%d %s %s %s", myindex, bnum, 
-                lightslist[bkey]["state"],
-                lightslist[bkey]["modelid"],
-                lightslist[bkey]["name"]
-                );
+            string longernamem = format("Hub%d-Bulb%d", myindex, bnum);
             Bulb b = new Bulb(myindex, boringname, boringname, bnum);
+            JSONValue state = bulbinfo["state"];
+            writefln("  + bulb[%d] @hub[%d] bnum=%d BN=%d %s %s   on:%s bri:%s  reachable:%s ", 
+                    b.myindex,  myindex, myindex,   bnum,
+                    bulbinfo["modelid"],
+                    bulbinfo["name"],
+                    state["on"], state["bri"], state["reachable"]
+                    );
         }
     }
 }
 
 
-void add_hub(string mac0, string ip0, string pw0, string name0, string shortname0)  {
-    hubs.length++;
-    hubs[$-1] = new Hub(mac0,ip0,pw0,name0,shortname0);
-}
 
 void list_all_hubs()  {
     foreach (Hub hub; hubs)  {
@@ -156,7 +159,8 @@ class Bulb {
     }
     
     void describe_self_one_line()   {
-        writefln("B%d hnum=%d  %s %s", imyhub, bulbnum, shortname, descr);
+        writefln("bulb[%d] hub[%d] bnum=%d   %s %s", 
+            myindex, imyhub, bulbnum, shortname, descr);
     }
     
     
@@ -363,7 +367,7 @@ void colorize_bulbs(int idigit, bool wantbulbindex)  {
 }
 
 
-void animate_color_by_bulbindex( )   {
+void animate_color_by_bulbindex()   {
     colorize_bulbs(2,false);
     colorize_bulbs(1,false);
     colorize_bulbs(0,false);
@@ -380,10 +384,10 @@ void list_all_bulbs()    {
 }
 
 
-void refresh_bulbs_list() {
+void rebuild_bulbs_list() {
     bulbs.length=0;
     foreach (hub; hubs)  {
-        hub.read_known_bulbs();
+        hub.add_all_known_to_bulbs_list();
     }
 }
 
@@ -395,26 +399,31 @@ int main(string[] args)  {
     hubindex icurrenthub = 0;   // none
     
     // Hardcoded for my actual hardware at this time
-    add_hub("00:17:88:21:8A:2E",
+    /*TODO*/  // read from config file, or call find_hubs() scanning network
+    Hub hub0 = new Hub("00:17:88:21:8A:2E",
              "192.168.11.41",
              "78g2lrMNHZHZFozjDJ7z7lneQhl8guZpzssU0HIr",
              "Hub1-1537-2016",  "hub1"
              );
-    add_hub("00:17:88:4D:97:4D",
+             
+    Hub hub1 = new Hub("00:17:88:4D:97:4D",
              "192.168.11.10",
              "VHQitrMnCUvVb4YLmuTmYQvO54ZjUgihgSJGKTFy",
-             "Hub2-1707-2017",   "h2"
+             "Hub2-1707-2017",   "hub2"
              );
     
-    hubindex ihub1 = 0;   // the functional one, controls two bulbs
-    hubindex ihub2 = 1;   // the newer one, seems to not control any for now
+    hubindex ihub0 = 0;   // the functional one, controls two bulbs
+    hubindex ihub1 = 1;   // the newer one, seems to not control any for now
     
     if (false)  {
         hubs[ihub1].get_all_hub_info();
     }
     
+    rebuild_bulbs_list();
+
     
     // Hardcoded scaffolding, define one bulb for immediate testing
+    /* GONE! */   /* "B#" command has been added */
     
     bulbindex icurrentbulb = 0;
     
@@ -436,8 +445,6 @@ int main(string[] args)  {
         auto tokens = cmdline.split!isWhite;
         if (cmdline.length==0)  continue;
         
-        refresh_bulbs_list();
-        
         switch (tokens[0])  {
             
             case "list": 
@@ -453,6 +460,7 @@ int main(string[] args)  {
                     break;
                     
             case "find":
+                    writeln("CMD = find  !!!");
                     if (tokens.length<2) {
                         writeln("Find what?");
                         continue;
@@ -461,7 +469,8 @@ int main(string[] args)  {
                         case "bulbs":
                             if (!hubs[icurrenthub]) break;
                             hubs[icurrenthub].find_new_physical_bulbs();
-                            refresh_bulbs_list();
+                            /*TODO*/ // don't rebuild whole list, but add just new ones
+                            rebuild_bulbs_list();
                             list_all_bulbs();
                             writeln("LISTED KNOWN BULBS");
                             break;
@@ -489,22 +498,12 @@ int main(string[] args)  {
                     }
                     break;
                     
-            case "B0":
-                    icurrentbulb=0;
-                    goto bulb_report;
-            case "B1":
-                    icurrentbulb=1;
-                    bulb_report:
-                    writefln("focused on bulb %s num %d", 
-                        bulbs[icurrentbulb].shortname, 
-                        bulbs[icurrentbulb].bulbnum);
-                    break;
                     
-            case "hub1":
-                    icurrenthub = ihub1;
+            case "hub0":
+                    icurrenthub = 0;
                     break;
-            case "hub2":
-                    icurrenthub = ihub2;
+            case "hub1":
+                    icurrenthub = 1;
                     break;
                     
             case "off":
@@ -551,6 +550,20 @@ int main(string[] args)  {
                             writefln("Temp %.1f out of range. Must have %.0f < temp < %.0f", 
                                         temp, min_color_temp, max_color_temp);
                         }
+                    }
+                }else if (tokens[0].length>=2 
+                        && (tokens[0][0]=='b' || tokens[0][0]=='B')
+                        &&  isDigit(tokens[0][1]))   {
+                    bulbindex ib = to!ushort( tokens[0][1..$].to!int );
+                    if (ib>=0 && ib<bulbs.length)  {
+                        icurrentbulb=ib;
+                        writefln("   focus on bulb [%d] bnum=%d hub[%d] %s",
+                              icurrentbulb, bulbs[icurrentbulb].bulbnum,
+                              bulbs[icurrentbulb].imyhub,
+                              bulbs[icurrentbulb].shortname);
+                    }else {
+                        writefln("bulb index %d out of range 0 ... %d",
+                             ib,  bulbs.length-1);
                     }
                 }else if (tokens[0] in named_color_dictionary) {
                     if (!bulbs.length) continue;
