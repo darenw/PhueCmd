@@ -344,6 +344,13 @@ CIEColor[10] color_code_colors = [
 ];
 
 
+void turn_all_bulbs(BulbState desired)  {
+    foreach (Bulb b; bulbs)  {
+        b.turn(desired);
+    }
+}
+
+
 void dim_all_bulbs() {
     for (bulbindex ib=0; ib<bulbs.length; ib++)  {
         bulbs[ib].set_color(new Color(ZEROBRIGHT));
@@ -396,8 +403,6 @@ int main(string[] args)  {
     writeln("START");
     init_named_colors();
     
-    hubindex icurrenthub = 0;   // none
-    
     // Hardcoded for my actual hardware at this time
     /*TODO*/  // read from config file, or call find_hubs() scanning network
     Hub hub0 = new Hub("00:17:88:21:8A:2E",
@@ -430,15 +435,12 @@ int main(string[] args)  {
     
     bool running = true;
     while (running)  {
-        if (icurrenthub<9999 && hubs.length>=1 && bulbs.length>=1) {
-            writef("H%d %s, B%d %s: phuecmd> ", 
-                hubs[icurrenthub].myindex,
-                hubs[icurrenthub].shortname,
-                bulbs[icurrentbulb].bulbnum,
+        if (bulbs.length>=1) {
+            writef("B%d=%d %s: phuecmd> ", 
+                bulbs[icurrentbulb].myindex, icurrentbulb, //should be same /*REMOVE*/
                 bulbs[icurrentbulb].shortname);
-        }
-        else {
-            write("phuecmd> ");
+        } else {
+            write("(no bulbs listed) phuecmd> ");
         }
         
         auto cmdline = readln().chomp.strip;
@@ -467,13 +469,23 @@ int main(string[] args)  {
                     }
                     switch (tokens[1]) {
                         case "bulbs":
-                            if (!hubs[icurrenthub]) break;
-                            hubs[icurrenthub].find_new_physical_bulbs();
+                            if (tokens.length<4 || tokens[2]!="hub" || !isDigit(tokens[3][0])) {
+                                writeln("which hub? Command example: 'find bulbs hub 2");
+                                continue;
+                            }
+                            if (hubs.length==0) {
+                                writeln("Don't gots no hubs in hubs list! Command ignored.");
+                                break;
+                            }
+                            
+                            hubindex ihub = to!ushort(tokens[3]);
+                            hubs[ihub].find_new_physical_bulbs();
                             /*TODO*/ // don't rebuild whole list, but add just new ones
                             rebuild_bulbs_list();
                             list_all_bulbs();
                             writeln("LISTED KNOWN BULBS");
                             break;
+                            
                         case "hubs":
                             goto default;
                         default:
@@ -499,27 +511,29 @@ int main(string[] args)  {
                     break;
                     
                     
-            case "hub0":
-                    icurrenthub = 0;
-                    break;
-            case "hub1":
-                    icurrenthub = 1;
-                    break;
-                    
             case "off":
                     bulbs[icurrentbulb].turn(BulbState.OFF);
                     break;
             case "on":
                     bulbs[icurrentbulb].turn(BulbState.ON);
                     break;
-                    
+            
+            case "all":
+                    switch (tokens[1])  {
+                        case "on":  turn_all_bulbs(BulbState.ON);  break;
+                        case "off": turn_all_bulbs(BulbState.OFF); break;
+                        case "dim": dim_all_bulbs(); break;
+                        default: break;
+                    }
+                    break;
                     
             case "num":
                     animate_color_by_bulbindex();
                     break;
                     
-            case "forget-all":
-                    hubs[icurrenthub].forget_all_physical_bulbs();
+            // hacky test command, must be ultimately removed
+            case "forget-all-bulbs-hub1":
+                    hubs[1].forget_all_physical_bulbs();
                     break;
                     
             case "create-hardcoded-bulbs":
@@ -533,9 +547,6 @@ int main(string[] args)  {
                     running=false;
                     break;
                     
-            case "dim":
-                    dim_all_bulbs();
-                    break;
                     
             default:
                 if (isDigit(tokens[0][0]))  {
