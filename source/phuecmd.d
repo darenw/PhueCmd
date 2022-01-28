@@ -1,5 +1,5 @@
 // PhueCmd  main
-// THIS INITIAL WRITING: hackwork! hardcoded, classes not put into own files.
+// THIS INITIAL WRITING: hackwork! hardcoded, classes not put into own files, messy, etc
 
 
 import std.stdio;
@@ -13,15 +13,16 @@ import std.ascii;
 import std.conv;
 import std.math;
 import std.algorithm.searching;
+import std.algorithm.comparison;
 import std.json;
 import std.net.curl;
 //import std.thread;
 import core.thread;
 
 
-alias hubindex = ushort;
-alias bulbindex = ushort;
-alias groupindex = ushort;
+
+alias bulbindex = ushort;     // unique id number within a multi-hub system
+alias groupindex = ushort;    // 
 alias paletteindex = ushort;
 
 
@@ -33,7 +34,6 @@ Group[] groups;
 
 
 class Hub  {
-    hubindex myindex;
     string macaddr;      // what's best, ubyte[]? string? other?
     string ipaddr;       // something like "12.34.56.78"
     string password;     // mile long string of base 62
@@ -48,17 +48,16 @@ class Hub  {
         shortname=shortname0;
         myurl = format("http://%s/api/%s/", 
                         ipaddr, password);
-        myindex = cast(hubindex)hubs.length;
         hubs ~= this;        
-        writefln("Using hub[%d]  %s  %s  %s ", myindex, ipaddr, macaddr, name);
+        writefln("Hub[%d]  %s  %s  %s ", hubs.length-1,  ipaddr, macaddr, name);
     }
     
     ~this() {
     }
     
     void describe_self_one_line()   {
-        writefln("hub[%d] %s %s  %s (%s)", 
-               myindex, ipaddr,  macaddr, name, shortname);
+        writefln("hub %s  %s  %s (%s)", 
+               ipaddr,  macaddr, name, shortname);
     }
     
     
@@ -80,6 +79,7 @@ class Hub  {
         writeln(stuff);
     }
     
+    
     void find_new_physical_bulbs()  {
         writeln("Requesting search for new bulbs...");
         
@@ -98,7 +98,7 @@ class Hub  {
         JSONValue lightslist = parseJSON(spewage);
         foreach (string bkey, JSONValue binfo; lightslist)  {
             int bnum = bkey.to!int;
-            writef("deleting bulb num %s from hub[%s]... ", bnum,  myindex);
+            writef("deleting bulb num %s from hub %s (%s)... ", bnum, shortname, ipaddr);
             del( myurl ~ "lights/" ~ bkey);
             writefln("gone!");
         }
@@ -107,18 +107,18 @@ class Hub  {
 
     
     void add_all_known_to_bulbs_list()   {
-        // DANGER! Does not check if bulb already in bulbs[]
+        /*TODO*/ // DANGER! Does not check if bulb already in bulbs[]
         auto spewage = get( myurl ~ "lights/");
         JSONValue lightslist = parseJSON(spewage);
         foreach (string bkey, JSONValue binfo; lightslist)  {
             int bnum = bkey.to!int;
             JSONValue bulbinfo = lightslist[bkey];
-            string boringname = format("H%dB%d", myindex, bnum);
-            string longernamem = format("Hub%d-Bulb%d", myindex, bnum);
-            Bulb b = new Bulb(myindex, boringname, boringname, bnum);
+            string boringname = format("H%sB%d", shortname, bnum);
+            string longernamem = format("Hub %s-Bulb%d", name, bnum);
+            Bulb b = new Bulb(this, boringname, boringname, bnum);
             JSONValue state = bulbinfo["state"];
-            writefln("  + bulb[%d] @hub[%d] bnum=%d BN=%d %s %s   on:%s bri:%s  reachable:%s ", 
-                    b.myindex,  myindex, myindex,   bnum,
+            writefln("  + bulb[%d] hub %s, bnum=%d   %s %s   on:%s bri:%s  reachable:%s ", 
+                    b.myindex,  shortname,  bnum,
                     bulbinfo["modelid"],
                     bulbinfo["name"],
                     state["on"], state["bri"], state["reachable"]
@@ -127,6 +127,20 @@ class Hub  {
     }
 }
 
+
+void find_new_physical_bulbs(string recipient_hub_name)  {
+    // hub_name may be short name or long name
+    Hub the_chosen_one = find_hub_by_name(recipient_hub_name);
+    if (!the_chosen_one){
+        writefln("No hub named %s.  Bulb search cancelled.", recipient_hub_name);
+        return;
+    }
+     the_chosen_one.find_new_physical_bulbs();
+    /*TODO*/ // don't rebuild whole list, but add just new ones
+    rebuild_bulbs_list();
+    list_all_bulbs();
+    writeln("LISTED KNOWN BULBS");    
+}
 
 
 void list_all_hubs()  {
@@ -140,7 +154,7 @@ enum BulbState { OFF, ON }
 
 class Bulb {
     bulbindex myindex;
-    hubindex  imyhub;
+    Hub myhub;
     string name, shortname, descr;
     int bulbnum;        // number assigned by hub
     CIEColor latest_color;
@@ -148,9 +162,9 @@ class Bulb {
     float    latest_color_temp;
     BulbState     latest_onoff_state;
     
-    this(hubindex ihub, string name0, string shortname0, int bulbnum0) {
+    this(Hub hub, string name0, string shortname0, int bulbnum0) {
         /*TODO*/ // check if any existing bulb has same bulbnum
-        imyhub = ihub;
+        myhub = hub;
         name=name0;
         shortname=shortname0;
         bulbnum = bulbnum0;
@@ -159,8 +173,8 @@ class Bulb {
     }
     
     void describe_self_one_line()   {
-        writefln("bulb[%d] hub[%d] bnum=%d   %s %s", 
-            myindex, imyhub, bulbnum, shortname, descr);
+        writefln("bulb[%d] hub[%s] bnum=%d   %s %s", 
+            myindex, myhub.shortname, bulbnum, shortname, descr);
     }
     
     
@@ -172,11 +186,11 @@ class Bulb {
     
     
     void send(string jsoncmd)  {
-        hubs[imyhub].send_bulb_settings(myindex, jsoncmd);
+        myhub.send_bulb_settings(myindex, jsoncmd);
     }
 
     void send(JSONValue cmd)  {
-        hubs[imyhub].send_bulb_settings(myindex, cmd);
+        myhub.send_bulb_settings(myindex, cmd);
     }
 
     void set_color(Color color)   {
@@ -304,10 +318,10 @@ NamedColorDef[] named_colors = [
     { cie:{1.00, 0.381, 0.370},   name:"white"},
     { cie:{0.25, 0.381, 0.380},   name:"gray"},
     { cie:{1.00, 0.482, 0.440},   name:"yellow"},
-    { cie:{0.20, 0.524, 0.395},   name:"brown"},
+    { cie:{0.16, 0.511, 0.405},   name:"brown"},
     { cie:{0.75, 0.280, 0.451},   name:"green"},
-    { cie:{0.76, 0.215, 0.196},   name:"blue"},
-    { cie:{0.60, 0.251, 0.115},   name:"violet"},
+    { cie:{0.76, 0.205, 0.185},   name:"blue"},
+    { cie:{0.50, 0.221, 0.115},   name:"violet"},
     { cie:{0.70, 0.321, 0.12},   name:"purple"},
     { cie:{0.83, 0.381, 0.13},   name:"magenta"},
     { cie:{0.70, 0.441, 0.320},   name:"scent"},
@@ -337,9 +351,9 @@ CIEColor[10] color_code_colors = [
     /* 3 */  { 0.87, 0.56, 0.39},
     /* 4 */  { 0.98, 0.48, 0.46},
     /* 5 */  { 0.70, 0.30, 0.48},
-    /* 6 */  { 0.71, 0.21, 0.21},
+    /* 6 */  { 0.61, 0.18, 0.19},
     /* 7 */  { 0.64, 0.22, 0.12},
-    /* 8 */  { 0.35, 0.33, 0.33},
+    /* 8 */  { 0.30, 0.36, 0.36},
     /* 9 */  { 0.98, 0.33, 0.33},
 ];
 
@@ -399,33 +413,44 @@ void rebuild_bulbs_list() {
 }
 
 
+Hub find_hub_by_name(string name) {
+    string n = toLower(name);
+    foreach (hub; hubs)  {
+        if (toLower(hub.name)==n) return hub;
+        if (toLower(hub.shortname)==n) return hub;
+    } 
+    return null;
+}
+
+
+class PhueSystem  {
+    /*TODO*/ 
+    // put bulbs[], icurrentbulb, command processing, etc here. 
+    //After some clean-up refactoring is done.
+}
+
+
+
 int main(string[] args)  {
     writeln("START");
     init_named_colors();
     
     // Hardcoded for my actual hardware at this time
     /*TODO*/  // read from config file, or call find_hubs() scanning network
-    Hub hub0 = new Hub("00:17:88:21:8A:2E",
+    Hub hub1 = new Hub("00:17:88:21:8A:2E",
              "192.168.11.41",
              "78g2lrMNHZHZFozjDJ7z7lneQhl8guZpzssU0HIr",
              "Hub1-1537-2016",  "hub1"
              );
              
-    Hub hub1 = new Hub("00:17:88:4D:97:4D",
+    Hub hub2 = new Hub("00:17:88:4D:97:4D",
              "192.168.11.10",
              "VHQitrMnCUvVb4YLmuTmYQvO54ZjUgihgSJGKTFy",
              "Hub2-1707-2017",   "hub2"
              );
     
-    hubindex ihub0 = 0;   // the functional one, controls two bulbs
-    hubindex ihub1 = 1;   // the newer one, seems to not control any for now
-    
-    if (false)  {
-        hubs[ihub1].get_all_hub_info();
-    }
     
     rebuild_bulbs_list();
-
     
     // Hardcoded scaffolding, define one bulb for immediate testing
     /* GONE! */   /* "B#" command has been added */
@@ -460,39 +485,6 @@ int main(string[] args)  {
                         }
                     }
                     break;
-                    
-            case "find":
-                    writeln("CMD = find  !!!");
-                    if (tokens.length<2) {
-                        writeln("Find what?");
-                        continue;
-                    }
-                    switch (tokens[1]) {
-                        case "bulbs":
-                            if (tokens.length<4 || tokens[2]!="hub" || !isDigit(tokens[3][0])) {
-                                writeln("which hub? Command example: 'find bulbs hub 2");
-                                continue;
-                            }
-                            if (hubs.length==0) {
-                                writeln("Don't gots no hubs in hubs list! Command ignored.");
-                                break;
-                            }
-                            
-                            hubindex ihub = to!ushort(tokens[3]);
-                            hubs[ihub].find_new_physical_bulbs();
-                            /*TODO*/ // don't rebuild whole list, but add just new ones
-                            rebuild_bulbs_list();
-                            list_all_bulbs();
-                            writeln("LISTED KNOWN BULBS");
-                            break;
-                            
-                        case "hubs":
-                            goto default;
-                        default:
-                            { }
-                    }
-                    break;
-            
             case "forget":
                     if (tokens.length<2)  {
                         writeln("Forget what? bulbs, hubs, palette...?");
@@ -536,18 +528,19 @@ int main(string[] args)  {
                     hubs[1].forget_all_physical_bulbs();
                     break;
                     
-            case "create-hardcoded-bulbs":
-                    Bulb bulb29 = new Bulb(0, "Bedroom Lamp", "Bedrm", 29);
+            case "create-hardcoded-bulbs":  /*DELETE*/
+                    // DANGEROUS! (not really, just useless & stoopid) 
+                    Bulb bulb29 = new Bulb(hub1, "Bedroom Lamp", "Bedrm", 29);
                     bulb29.descr = "The one with the big shade";
-                    Bulb bulb31 = new Bulb(0, "Orange Desklamp", "DeskO", 31);
+                    Bulb bulb31 = new Bulb(hub1, "Orange Desklamp", "DeskO", 31);
                     bulb31.descr = "Desk lamp next to guitar amp";
                     break;
-                    
+            
             case "quit": 
                     running=false;
                     break;
-                    
-                    
+            
+            
             default:
                 if (isDigit(tokens[0][0]))  {
                     if (tokens[0].length==1) {
@@ -568,9 +561,8 @@ int main(string[] args)  {
                     bulbindex ib = to!ushort( tokens[0][1..$].to!int );
                     if (ib>=0 && ib<bulbs.length)  {
                         icurrentbulb=ib;
-                        writefln("   focus on bulb [%d] bnum=%d hub[%d] %s",
+                        writefln("   focus on bulb [%d] bnum=%d %s",
                               icurrentbulb, bulbs[icurrentbulb].bulbnum,
-                              bulbs[icurrentbulb].imyhub,
                               bulbs[icurrentbulb].shortname);
                     }else {
                         writefln("bulb index %d out of range 0 ... %d",
