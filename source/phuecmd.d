@@ -21,14 +21,11 @@ import core.thread;
 
 
 
+alias bulbnumber = ushort;    // number of bulb known hub
 alias bulbindex = ushort;     // unique id number within a multi-hub system
 alias groupindex = ushort;    // 
 alias paletteindex = ushort;
 
-
-Hub[] hubs;
-Bulb[] bulbs;
-Group[] groups;
 
 
 
@@ -48,8 +45,6 @@ class Hub  {
         shortname=shortname0;
         myurl = format("http://%s/api/%s/", 
                         ipaddr, password);
-        hubs ~= this;        
-        writefln("Hub[%d]  %s  %s  %s ", hubs.length-1,  ipaddr, macaddr, name);
     }
     
     ~this() {
@@ -61,14 +56,14 @@ class Hub  {
     }
     
     
-    void send_bulb_settings(bulbindex ibulb, JSONValue cmd)  {
-        string b = format("lights/%d/state", bulbs[ibulb].bulbnum);
+    void send_bulb_settings(bulbnumber bulbnum, JSONValue cmd)  {
+        string b = format("lights/%d/state", bulbnum);
         put(myurl ~ b, cmd.toString);
         
     }
 
-    void send_bulb_settings(bulbindex ibulb, string jsoncmd)  {
-        string b = format("lights/%d/state", bulbs[ibulb].bulbnum);
+    void send_bulb_settings(bulbnumber bulbnum, string jsoncmd)  {
+        string b = format("lights/%d/state", bulbnum);
         put( myurl ~ b, jsoncmd);
     }
     
@@ -89,8 +84,15 @@ class Hub  {
         
         // Obtain list of newly found bulbs with GET lights/new
         auto newbulbs = JSONValue( get( myurl ~ "lights/new") );
-        
-        
+        string newbulbnums = "";
+        int count=0;
+        foreach (string k, JSONValue x; newbulbs) {
+            writef(" <<%s>> ", k);
+            newbulbnums ~= format(" %d", k.to!int);
+            count++;
+        }
+        writefln("Found %d new bulbs since %s:  %s", 
+            count, newbulbs["lastscan"],  newbulbnums);
     }    
     
     void forget_all_physical_bulbs()  {
@@ -128,27 +130,6 @@ class Hub  {
 }
 
 
-void find_new_physical_bulbs(string recipient_hub_name)  {
-    // hub_name may be short name or long name
-    Hub the_chosen_one = find_hub_by_name(recipient_hub_name);
-    if (!the_chosen_one){
-        writefln("No hub named %s.  Bulb search cancelled.", recipient_hub_name);
-        return;
-    }
-     the_chosen_one.find_new_physical_bulbs();
-    /*TODO*/ // don't rebuild whole list, but add just new ones
-    rebuild_bulbs_list();
-    list_all_bulbs();
-    writeln("LISTED KNOWN BULBS");    
-}
-
-
-void list_all_hubs()  {
-    foreach (Hub hub; hubs)  {
-        hub.describe_self_one_line();
-    }
-}
-
 
 enum BulbState { OFF, ON }
 
@@ -168,8 +149,6 @@ class Bulb {
         name=name0;
         shortname=shortname0;
         bulbnum = bulbnum0;
-        myindex = cast(bulbindex)bulbs.length;
-        bulbs ~= this;
     }
     
     void describe_self_one_line()   {
@@ -218,8 +197,8 @@ class Bulb {
 
 class Group    {
     
-    bulbindex[] mybulbs;
-    string name, shortname;
+    bulbindex[] members;
+    string name;
     
     void eat(bulbindex ibulb)  {
         // can a bulb belong to more than one group? yes.
@@ -230,10 +209,10 @@ class Group    {
         // A bulb in the northwest corner is in two groups.
         // A bulb on the bookshelf along the north wall is in two groups
         
-        if (canFind(mybulbs, ibulb)) 
-            return;
-        mybulbs.length++;
-        mybulbs[$-1] = ibulb;
+        if (canFind(members, ibulb)) 
+                return;
+        members.length++;
+        members[$-1] = ibulb;
     }
 }
 
@@ -358,82 +337,225 @@ CIEColor[10] color_code_colors = [
 ];
 
 
-void turn_all_bulbs(BulbState desired)  {
-    foreach (Bulb b; bulbs)  {
-        b.turn(desired);
+
+
+
+class Sequence  {
+    struct Point {
+        CIEColor color;
+        float tstart;  // seconds, rel to sequence start
+        float duration;
     }
+    Point[] points;
 }
 
-
-void dim_all_bulbs() {
-    for (bulbindex ib=0; ib<bulbs.length; ib++)  {
-        bulbs[ib].set_color(new Color(ZEROBRIGHT));
-    }
-}
-
-void colorize_bulbs(int idigit, bool wantbulbindex)  {
-    Thread.sleep( dur!("msecs")( 300 ) );    
-    dim_all_bulbs();
-    for (bulbindex ib=0; ib<bulbs.length; ib++)  {
-        ushort n = to!ushort( (wantbulbindex)? bulbs[ib].myindex : bulbs[ib].bulbnum );
-        ushort[3] digit;
-        digit[2]=n/100;
-        ushort r = to!ushort( n-100*digit[2] );
-        digit[1]=r/10;
-        digit[0]= to!ushort( r-10*digit[1] );
-        
-        bulbs[ib].set_color(new Color(color_code_colors[digit[idigit]]));
-    }
-    Thread.sleep( dur!("msecs")( 900 ) );
-}
-
-
-void animate_color_by_bulbindex()   {
-    colorize_bulbs(2,false);
-    colorize_bulbs(1,false);
-    colorize_bulbs(0,false);
-    for (bulbindex ib=0; ib<bulbs.length; ib++)  {
-        bulbs[ib].set_color(new Color(ZEROBRIGHT));
-    }
-}
-
-
-void list_all_bulbs()    {
-    foreach (Bulb bulb; bulbs)  {
-        bulb.describe_self_one_line();
-    }
-}
-
-
-void rebuild_bulbs_list() {
-    bulbs.length=0;
-    foreach (hub; hubs)  {
-        hub.add_all_known_to_bulbs_list();
-    }
-}
-
-
-Hub find_hub_by_name(string name) {
-    string n = toLower(name);
-    foreach (hub; hubs)  {
-        if (toLower(hub.name)==n) return hub;
-        if (toLower(hub.shortname)==n) return hub;
-    } 
-    return null;
-}
 
 
 class PhueSystem  {
     /*TODO*/ 
     // put bulbs[], icurrentbulb, command processing, etc here. 
     //After some clean-up refactoring is done.
+    
+    
+    Bulb[] bulbs;
+    Hub[] hubs;
+    Group[] groups;
+    Sequence[] seqs;
+    
+    bulbindex icurrentbulb;   // for short commands
+
+    this() {
+        writeln(" inside SYS Construct  ");
+    }
+    
+    void add(Hub h) {
+        writeln(" <<< 1 ");
+        writeln(" <<< 2 ");
+        hubs ~= h;        
+        writeln(" <<< 3 ");
+        writefln("+ Hub[%d]  %s  %s  %s ", 
+                   hubs.length-1,  
+                   h.ipaddr, h.macaddr, h.name);
+        writeln(" <<< 9 ");
+    }
+    
+    void turn_all_bulbs(BulbState desired)  {
+        foreach (Bulb b; bulbs)  {
+            b.turn(desired);
+        }
+    }
+
+    void dim_all_bulbs() {
+        set_color_all_bulbs(new Color(ZEROBRIGHT));
+    }
+
+    void set_color_all_bulbs(Color c) {
+        foreach (Bulb b; bulbs)  {
+            b.set_color(c);
+        }
+    }
+
+    void list_all_bulbs()    {
+        foreach (Bulb bulb; bulbs)  {
+            bulb.describe_self_one_line();
+        }
+    }
+    
+    
+    void colorize_bulbs_by_digit(int idigit, bool wantbulbindex)  {
+        Thread.sleep( dur!("msecs")( 300 ) );    
+        dim_all_bulbs();
+        for (bulbindex ib=0; ib<bulbs.length; ib++)  {
+            ushort n = to!ushort( (wantbulbindex)? bulbs[ib].myindex : bulbs[ib].bulbnum );
+            ushort[3] digit;
+            digit[2]=n/100;
+            ushort r = to!ushort( n-100*digit[2] );
+            digit[1]=r/10;
+            digit[0]= to!ushort( r-10*digit[1] );
+            bulbs[ib].set_color(new Color(color_code_colors[digit[idigit]]));
+        }
+        Thread.sleep( dur!("msecs")( 900 ) );
+    }
+
+    void animate_color_by_bulbnum()   {
+        colorize_bulbs_by_digit(2,false);
+        colorize_bulbs_by_digit(1,false);
+        colorize_bulbs_by_digit(0,false);
+        for (bulbindex ib=0; ib<bulbs.length; ib++)  {
+            bulbs[ib].set_color(new Color(ZEROBRIGHT));
+        }
+    }
+
+
+    void rebuild_bulbs_list() {
+        bulbs.length=0;
+        foreach (hub; hubs)  {
+            hub.add_all_known_to_bulbs_list();
+        }
+    }
+
+
+    void list_all_hubs()  {
+        foreach (Hub hub; hubs)  {
+            hub.describe_self_one_line();
+        }
+    }
+
+
+    Hub find_hub_by_name(string name) {
+        string n = toLower(name);
+        foreach (hub; hubs)  {
+            if (toLower(hub.name)==n) return hub;
+            if (toLower(hub.shortname)==n) return hub;
+        } 
+        return null;
+    }
+    
+    void find_new_physical_bulbs(string recipient_hub_name)  {
+        // hub_name may be short name or long name
+        Hub the_chosen_one = find_hub_by_name(recipient_hub_name);
+        if (!the_chosen_one){
+            writefln("No hub named %s.  Bulb search cancelled.", recipient_hub_name);
+            return;
+        }
+         the_chosen_one.find_new_physical_bulbs();
+        /*TODO*/ // don't rebuild whole list, but add just new ones
+        rebuild_bulbs_list();
+        list_all_bulbs();
+        writeln("LISTED KNOWN BULBS");    
+    }
+
+    
+    void execute(string cmd)  {
+        
+    }
 }
+
+
+bool quit_proc(PhueSystem system, string[] tokens) {
+    /* nothing, let main command loop deal with */
+    return false;
+}
+
+bool dim_proc(PhueSystem system, string[] tokens) {
+    system.dim_all_bulbs();
+    return true;
+}
+
+
+bool list_proc(PhueSystem system, string[] tokens) {
+    if (tokens.length<2 || tokens[1].toLower()=="bulbs") {
+        system.list_all_bulbs();
+    } else if (tokens[1]=="hubs")  {
+        system.list_all_hubs();
+    }
+    return true;
+}
+
+bool animate_bulbnum_proc(PhueSystem system, string[] tokens) {
+    system.animate_color_by_bulbnum();
+    return true;
+}
+
+bool turn_on_proc(PhueSystem system, string[] tokens)  {
+    system.bulbs[system.icurrentbulb].turn(BulbState.ON);
+    return true;
+}
+
+bool turn_off_proc(PhueSystem system, string[] tokens)  {
+    system.bulbs[system.icurrentbulb].turn(BulbState.OFF);
+    return true;
+}
+
+bool all_proc(PhueSystem system, string[] tokens)  {
+    if (tokens.length<2) {
+        writeln("'all' do what?");
+        return false;
+    }
+    switch (tokens[1]) {
+        case "on":  system.turn_all_bulbs(BulbState.ON); break;
+        case "off":  system.turn_all_bulbs(BulbState.OFF); break;
+        case "dim":  system.dim_all_bulbs(); break;
+        default:
+            writefln("Unrecognized command %s ", tokens[1]);
+            return false;
+    }
+    return true;
+}
+
+bool choose_bulb_proc(PhueSystem system, string[] tokens)  {
+    
+    return true;
+}
+
+bool anim_proc(PhueSystem system, string[] tokens)  {
+    system.animate_color_by_bulbnum();
+    return true;
+}
+
+struct CommandDef  {
+    immutable string cmd;
+    bool function(PhueSystem, string[] tokens)  proc;
+    immutable string descr;
+}
+
+CommandDef[] command_defs = [
+    { "quit",  &quit_proc ,   "exit phuecmd"  },
+    { "dim",   &dim_proc  ,   "make current bulb dim"  },
+    { "on",    &turn_on_proc ,"turn on currently chosen bulb"  },
+    { "off",    &turn_off_proc, "turn off currently chosen bubl"  },
+    { "all",   &all_proc,     "affect all bulbs: on / off / dim "    },
+    { "anim",  &anim_proc,    "Flash bulb numbers using color code"  },
+    { "b#",    &choose_bulb_proc, "Choose which bulb to affect" },
+    { "list",  &list_proc,   "Print list of all bulbs or hubs" }
+];
 
 
 
 int main(string[] args)  {
     writeln("START");
-    init_named_colors();
+    init_named_colors();    
+    PhueSystem system = new PhueSystem;
     
     // Hardcoded for my actual hardware at this time
     /*TODO*/  // read from config file, or call find_hubs() scanning network
@@ -442,49 +564,37 @@ int main(string[] args)  {
              "78g2lrMNHZHZFozjDJ7z7lneQhl8guZpzssU0HIr",
              "Hub1-1537-2016",  "hub1"
              );
-             
     Hub hub2 = new Hub("00:17:88:4D:97:4D",
              "192.168.11.10",
              "VHQitrMnCUvVb4YLmuTmYQvO54ZjUgihgSJGKTFy",
              "Hub2-1707-2017",   "hub2"
              );
-    
-    
-    rebuild_bulbs_list();
-    
-    // Hardcoded scaffolding, define one bulb for immediate testing
-    /* GONE! */   /* "B#" command has been added */
-    
-    bulbindex icurrentbulb = 0;
+
+    system.add(hub1);
+    system.add(hub2);
+    system.rebuild_bulbs_list();
     
     
     bool running = true;
     while (running)  {
-        if (bulbs.length>=1) {
-            writef("B%d=%d %s: phuecmd> ", 
-                bulbs[icurrentbulb].myindex, icurrentbulb, //should be same /*REMOVE*/
-                bulbs[icurrentbulb].shortname);
-        } else {
-            write("(no bulbs listed) phuecmd> ");
-        }
-        
+        writefln("phuecmd B%d> ", system.icurrentbulb);        
         auto cmdline = readln().chomp.strip;
         auto tokens = cmdline.split!isWhite;
         if (cmdline.length==0)  continue;
         
+        /*TODO*/ // look up cmd in the list
+        // temp workaround: keep the monster switch statement here
+        //CommandDef cmddef 
+        auto cmddef = find!( (cd,t)=> cd.cmd==t)(command_defs,tokens[0]);
+        writeln(cmddef);
+        if (cmddef)  {
+            cmddef[0].proc(system, tokens);
+            continue;
+        }
+        
+        
         switch (tokens[0])  {
             
-            case "list": 
-                    if (tokens.length<2)  {
-                        writeln("List what? bulbs hubs palettes ...?");
-                    } else {
-                        switch (tokens[1]) {
-                            case "bulbs": list_all_bulbs(); break;
-                            case "hubs":  list_all_hubs();  break;
-                            default: continue;
-                        }
-                    }
-                    break;
             case "forget":
                     if (tokens.length<2)  {
                         writeln("Forget what? bulbs, hubs, palette...?");
@@ -492,10 +602,10 @@ int main(string[] args)  {
                     }
                     switch (tokens[1])  {
                         case "all-bulbs":
-                                foreach (hub; hubs)  {
+                                foreach (hub; system.hubs)  {
                                     hub.forget_all_physical_bulbs();
                                 }
-                                bulbs.length=0;
+                                system.bulbs.length=0;
                                 break;
                         default:
                                 continue;
@@ -503,29 +613,9 @@ int main(string[] args)  {
                     break;
                     
                     
-            case "off":
-                    bulbs[icurrentbulb].turn(BulbState.OFF);
-                    break;
-            case "on":
-                    bulbs[icurrentbulb].turn(BulbState.ON);
-                    break;
-            
-            case "all":
-                    switch (tokens[1])  {
-                        case "on":  turn_all_bulbs(BulbState.ON);  break;
-                        case "off": turn_all_bulbs(BulbState.OFF); break;
-                        case "dim": dim_all_bulbs(); break;
-                        default: break;
-                    }
-                    break;
-                    
-            case "num":
-                    animate_color_by_bulbindex();
-                    break;
-                    
             // hacky test command, must be ultimately removed
             case "forget-all-bulbs-hub1":
-                    hubs[1].forget_all_physical_bulbs();
+                    // hubs[1].forget_all_physical_bulbs();
                     break;
                     
             case "create-hardcoded-bulbs":  /*DELETE*/
@@ -541,15 +631,15 @@ int main(string[] args)  {
                     break;
             
             
-            default:
+            default:/*TODO*/ // shovel this into command procedures, phuesystem
                 if (isDigit(tokens[0][0]))  {
                     if (tokens[0].length==1) {
                         int n = tokens[0].to!int;
-                        bulbs[icurrentbulb].set_color(color_code_colors[n]);
+                        system.bulbs[system.icurrentbulb].set_color(color_code_colors[n]);
                     } else {
                         float temp = tokens[0].to!float;
                         if (temp>min_color_temp && temp<max_color_temp) {
-                            bulbs[icurrentbulb].set_color(new Color(blackbody(temp)));
+                            system.bulbs[system.icurrentbulb].set_color(new Color(blackbody(temp)));
                         }else{
                             writefln("Temp %.1f out of range. Must have %.0f < temp < %.0f", 
                                         temp, min_color_temp, max_color_temp);
@@ -559,18 +649,18 @@ int main(string[] args)  {
                         && (tokens[0][0]=='b' || tokens[0][0]=='B')
                         &&  isDigit(tokens[0][1]))   {
                     bulbindex ib = to!ushort( tokens[0][1..$].to!int );
-                    if (ib>=0 && ib<bulbs.length)  {
-                        icurrentbulb=ib;
+                    if (ib>=0 && ib < system.bulbs.length)  {
+                        system.icurrentbulb=ib;
                         writefln("   focus on bulb [%d] bnum=%d %s",
-                              icurrentbulb, bulbs[icurrentbulb].bulbnum,
-                              bulbs[icurrentbulb].shortname);
+                              system.icurrentbulb, system.bulbs[system.icurrentbulb].bulbnum,
+                              system.bulbs[system.icurrentbulb].shortname);
                     }else {
                         writefln("bulb index %d out of range 0 ... %d",
-                             ib,  bulbs.length-1);
+                             ib,  system.bulbs.length-1);
                     }
                 }else if (tokens[0] in named_color_dictionary) {
-                    if (!bulbs.length) continue;
-                    bulbs[icurrentbulb].set_color(new Color(named_color_dictionary[tokens[0]]));
+                    if (!system.bulbs.length) continue;
+                    system.bulbs[system.icurrentbulb].set_color(new Color(named_color_dictionary[tokens[0]]));
                     
                 }else{
                     writefln("%s not implement or is gibberish", cmdline);
@@ -581,3 +671,4 @@ int main(string[] args)  {
     writeln("BYE!");
     return 0;
 }
+
