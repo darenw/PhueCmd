@@ -368,15 +368,24 @@ class PhueSystem  {
         writeln(" inside SYS Construct  ");
     }
     
+
     void add(Hub h) {
-        writeln(" <<< 1 ");
-        writeln(" <<< 2 ");
         hubs ~= h;        
-        writeln(" <<< 3 ");
         writefln("+ Hub[%d]  %s  %s  %s ", 
                    hubs.length-1,  
                    h.ipaddr, h.macaddr, h.name);
-        writeln(" <<< 9 ");
+    }
+    
+    
+    void set_current_bulb_by_bulbnum(int bulbnum) {
+        bulbindex i = 0;
+        while (i < bulbs.length) {
+            if (bulbs[i].bulbnum==bulbnum) {
+                icurrentbulb = i;
+                return;
+            }
+        }
+        // else, do nothing. May have no bulbs, or i out of range.
     }
     
     void turn_all_bulbs(BulbState desired)  {
@@ -394,13 +403,17 @@ class PhueSystem  {
             b.set_color(c);
         }
     }
+    
+    void set_current_bulb_color(Color color)  {
+        if (!bulbs.length) return;
+        bulbs[icurrentbulb].set_color(color);        
+    }
 
     void list_all_bulbs()    {
         foreach (Bulb bulb; bulbs)  {
             bulb.describe_self_one_line();
         }
     }
-    
     
     void colorize_bulbs_by_digit(int idigit, bool wantbulbindex)  {
         Thread.sleep( dur!("msecs")( 300 ) );    
@@ -465,11 +478,9 @@ class PhueSystem  {
         writeln("LISTED KNOWN BULBS");    
     }
 
-    
-    void execute(string cmd)  {
-        
-    }
 }
+
+
 
 
 bool quit_proc(PhueSystem system, string[] tokens) {
@@ -523,6 +534,25 @@ bool all_proc(PhueSystem system, string[] tokens)  {
     return true;
 }
 
+bool forget_proc(PhueSystem system, string[] tokens)  {
+    if (tokens.length<2)  {
+        writeln("Forget what?    valid options:\n     forget all bulbs");
+        return false;
+    }
+    
+    if (tokens[1]=="all" && tokens[2]=="bulbs")  {
+                foreach (hub; system.hubs)  {
+                    hub.forget_all_physical_bulbs();
+                }
+                system.bulbs.length=0;
+                return true;
+    }
+    return false;
+}
+
+
+
+
 bool choose_bulb_proc(PhueSystem system, string[] tokens)  {
     
     return true;
@@ -532,6 +562,8 @@ bool anim_proc(PhueSystem system, string[] tokens)  {
     system.animate_color_by_bulbnum();
     return true;
 }
+
+
 
 struct CommandDef  {
     immutable string cmd;
@@ -547,13 +579,53 @@ CommandDef[] command_defs = [
     { "all",   &all_proc,     "affect all bulbs: on / off / dim "    },
     { "anim",  &anim_proc,    "Flash bulb numbers using color code"  },
     { "b#",    &choose_bulb_proc, "Choose which bulb to affect" },
-    { "list",  &list_proc,   "Print list of all bulbs or hubs" }
+    { "list",  &list_proc,   "Print list of all bulbs or hubs" },
+    { "forget",&forget_proc,  "Delete bulbs from hub, clear phuecmd Bulb List"}
 ];
 
 
 
+bool execute_command(PhueSystem system, string cmdline) {
+
+    auto tokens = cmdline.split!isWhite;
+    if (tokens.length==0)  return false;
+    
+    // Look for a direct match
+    string cmdlower = toLower(tokens[0]);
+    foreach (cd; command_defs)  {
+        if (cmdlower==cd.cmd) {
+            writeln("Found command defintion: ", cd);
+            cd.proc(system, tokens);
+            return true;
+        }
+    }
+
+    // Nope? Maybe it's a "B#" command, where # is some number
+    if (cmdlower[0]=='b' && isDigit(cmdlower[1]))  {
+        // yeah, should check all chars not just [1].
+        int n = cmdlower[1..$].to!int;
+        system.set_current_bulb_by_bulbnum(n);
+        return true;
+    }
+        
+    // Still nope?  Maybe it's a color name, xy value, sequence... 
+    // Try single digit for electronics color code
+    if (tokens[0].length==1 && isDigit(tokens[0][0]))  {
+        
+    } else if (tokens[0] in named_color_dictionary) {
+        writeln("Found named color ");
+        system.set_current_bulb_color(new Color(named_color_dictionary[tokens[0]]));
+        return true;
+    } else {
+        writefln("%s not implement or is gibberish", cmdline);
+    }
+    
+    return false;
+}
+
+
+
 int main(string[] args)  {
-    writeln("START");
     init_named_colors();    
     PhueSystem system = new PhueSystem;
     
@@ -577,94 +649,13 @@ int main(string[] args)  {
     
     bool running = true;
     while (running)  {
-        writefln("phuecmd B%d> ", system.icurrentbulb);        
+        writef("phuecmd B%d> ", system.icurrentbulb);        
         auto cmdline = readln().chomp.strip;
-        auto tokens = cmdline.split!isWhite;
-        if (cmdline.length==0)  continue;
         
-        /*TODO*/ // look up cmd in the list
-        // temp workaround: keep the monster switch statement here
-        //CommandDef cmddef 
-        auto cmddef = find!( (cd,t)=> cd.cmd==t)(command_defs,tokens[0]);
-        writeln(cmddef);
-        if (cmddef)  {
-            cmddef[0].proc(system, tokens);
-            continue;
-        }
-        
-        
-        switch (tokens[0])  {
-            
-            case "forget":
-                    if (tokens.length<2)  {
-                        writeln("Forget what? bulbs, hubs, palette...?");
-                        continue;
-                    }
-                    switch (tokens[1])  {
-                        case "all-bulbs":
-                                foreach (hub; system.hubs)  {
-                                    hub.forget_all_physical_bulbs();
-                                }
-                                system.bulbs.length=0;
-                                break;
-                        default:
-                                continue;
-                    }
-                    break;
-                    
-                    
-            // hacky test command, must be ultimately removed
-            case "forget-all-bulbs-hub1":
-                    // hubs[1].forget_all_physical_bulbs();
-                    break;
-                    
-            case "create-hardcoded-bulbs":  /*DELETE*/
-                    // DANGEROUS! (not really, just useless & stoopid) 
-                    Bulb bulb29 = new Bulb(hub1, "Bedroom Lamp", "Bedrm", 29);
-                    bulb29.descr = "The one with the big shade";
-                    Bulb bulb31 = new Bulb(hub1, "Orange Desklamp", "DeskO", 31);
-                    bulb31.descr = "Desk lamp next to guitar amp";
-                    break;
-            
-            case "quit": 
-                    running=false;
-                    break;
-            
-            
-            default:/*TODO*/ // shovel this into command procedures, phuesystem
-                if (isDigit(tokens[0][0]))  {
-                    if (tokens[0].length==1) {
-                        int n = tokens[0].to!int;
-                        system.bulbs[system.icurrentbulb].set_color(color_code_colors[n]);
-                    } else {
-                        float temp = tokens[0].to!float;
-                        if (temp>min_color_temp && temp<max_color_temp) {
-                            system.bulbs[system.icurrentbulb].set_color(new Color(blackbody(temp)));
-                        }else{
-                            writefln("Temp %.1f out of range. Must have %.0f < temp < %.0f", 
-                                        temp, min_color_temp, max_color_temp);
-                        }
-                    }
-                }else if (tokens[0].length>=2 
-                        && (tokens[0][0]=='b' || tokens[0][0]=='B')
-                        &&  isDigit(tokens[0][1]))   {
-                    bulbindex ib = to!ushort( tokens[0][1..$].to!int );
-                    if (ib>=0 && ib < system.bulbs.length)  {
-                        system.icurrentbulb=ib;
-                        writefln("   focus on bulb [%d] bnum=%d %s",
-                              system.icurrentbulb, system.bulbs[system.icurrentbulb].bulbnum,
-                              system.bulbs[system.icurrentbulb].shortname);
-                    }else {
-                        writefln("bulb index %d out of range 0 ... %d",
-                             ib,  system.bulbs.length-1);
-                    }
-                }else if (tokens[0] in named_color_dictionary) {
-                    if (!system.bulbs.length) continue;
-                    system.bulbs[system.icurrentbulb].set_color(new Color(named_color_dictionary[tokens[0]]));
-                    
-                }else{
-                    writefln("%s not implement or is gibberish", cmdline);
-                }
+        if (cmdline=="quit") {
+            running=false;
+        } else {
+            execute_command(system, cmdline);
         }
     }
     
