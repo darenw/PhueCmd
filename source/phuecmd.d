@@ -58,12 +58,14 @@ class Hub  {
     
     void send_bulb_settings(bulbnumber bulbnum, JSONValue cmd)  {
         string b = format("lights/%d/state", bulbnum);
+writefln("Hub:sending(json) to bnum=%d <<%s>>((%s))", bulbnum, b, cmd);
         put(myurl ~ b, cmd.toString);
         
     }
 
     void send_bulb_settings(bulbnumber bulbnum, string jsoncmd)  {
         string b = format("lights/%d/state", bulbnum);
+writefln("Hub:sending(str) to bnum=%d <<%s>>((%s)) myurl %s", bulbnum, b, jsoncmd, myurl);
         put( myurl ~ b, jsoncmd);
     }
     
@@ -108,24 +110,27 @@ class Hub  {
     }
 
     
-    void add_all_known_to_bulbs_list()   {
+    Bulb[] all_my_bulbs()   {
         /*TODO*/ // DANGER! Does not check if bulb already in bulbs[]
+        Bulb[] mybulbs;
         auto spewage = get( myurl ~ "lights/");
         JSONValue lightslist = parseJSON(spewage);
         foreach (string bkey, JSONValue binfo; lightslist)  {
-            int bnum = bkey.to!int;
+            ushort bnum = bkey.to!ushort;
             JSONValue bulbinfo = lightslist[bkey];
             string boringname = format("H%sB%d", shortname, bnum);
-            string longernamem = format("Hub %s-Bulb%d", name, bnum);
-            Bulb b = new Bulb(this, boringname, boringname, bnum);
+            string longername = format("Hub %s-Bulb%d", name, bnum);
             JSONValue state = bulbinfo["state"];
+            Bulb b = new Bulb(this, longername, boringname, bnum);
             writefln("  + bulb[%d] hub %s, bnum=%d   %s %s   on:%s bri:%s  reachable:%s ", 
                     b.myindex,  shortname,  bnum,
                     bulbinfo["modelid"],
                     bulbinfo["name"],
                     state["on"], state["bri"], state["reachable"]
                     );
+            mybulbs ~= b;
         }
+        return mybulbs;
     }
 }
 
@@ -137,13 +142,13 @@ class Bulb {
     bulbindex myindex;
     Hub myhub;
     string name, shortname, descr;
-    int bulbnum;        // number assigned by hub
+    ushort bulbnum;        // number assigned by hub
     CIEColor latest_color;
     HSVColor latest_color_hsv;
     float    latest_color_temp;
     BulbState     latest_onoff_state;
     
-    this(Hub hub, string name0, string shortname0, int bulbnum0) {
+    this(Hub hub, string name0, string shortname0, ushort bulbnum0) {
         /*TODO*/ // check if any existing bulb has same bulbnum
         myhub = hub;
         name=name0;
@@ -158,6 +163,7 @@ class Bulb {
     
     
     void turn(BulbState desired)   {
+        writefln("Bulb.turn(%d)   msg=%s", desired,  (desired==BulbState.ON)? "{\"on\":true}" : "{\"on\":false}" );
         send( (desired==BulbState.ON)? "{\"on\":true}" : "{\"on\":false}" );
         // if successful, 
             latest_onoff_state = desired;
@@ -165,17 +171,19 @@ class Bulb {
     
     
     void send(string jsoncmd)  {
-        myhub.send_bulb_settings(myindex, jsoncmd);
+    writefln("Bulb[bnum=%d,i=%d].SEND(str) %s  myhub.name=%s", bulbnum, myindex, jsoncmd,myhub.shortname);
+        myhub.send_bulb_settings(bulbnum, jsoncmd);
     }
 
     void send(JSONValue cmd)  {
-        myhub.send_bulb_settings(myindex, cmd);
+    writefln("Bulb[bnum=%d,i=%d].SEND(json) %s myhub:name=%s", bulbnum, myindex, cmd,myhub.shortname);
+        myhub.send_bulb_settings(bulbnum, cmd);
     }
 
     void set_color(Color color)   {
         int bri = cast(int)floor(0.5+255*color.cie.L);
         string cmd = format(`{"bri":%d,"xy":[%.3f,%.3f]}`, bri,  color.cie.x, color.cie.y);
-        send( cmd);
+        send(cmd);
     }
     
     void set_color(CIEColor cie)  {
@@ -297,7 +305,7 @@ NamedColorDef[] named_colors = [
     { cie:{1.00, 0.381, 0.370},   name:"white"},
     { cie:{0.25, 0.381, 0.380},   name:"gray"},
     { cie:{1.00, 0.482, 0.440},   name:"yellow"},
-    { cie:{0.16, 0.511, 0.405},   name:"brown"},
+    { cie:{0.17, 0.556, 0.410},   name:"brown"},
     { cie:{0.75, 0.280, 0.451},   name:"green"},
     { cie:{0.76, 0.205, 0.185},   name:"blue"},
     { cie:{0.50, 0.221, 0.115},   name:"violet"},
@@ -339,7 +347,6 @@ CIEColor[10] color_code_colors = [
 
 
 
-
 class Sequence  {
     struct Point {
         CIEColor color;
@@ -352,23 +359,16 @@ class Sequence  {
 
 
 class PhueSystem  {
-    /*TODO*/ 
-    // put bulbs[], icurrentbulb, command processing, etc here. 
-    //After some clean-up refactoring is done.
-    
     
     Bulb[] bulbs;
     Hub[] hubs;
     Group[] groups;
     Sequence[] seqs;
     
-    bulbindex icurrentbulb;   // for short commands
-
     this() {
         writeln(" inside SYS Construct  ");
     }
     
-
     void add(Hub h) {
         hubs ~= h;        
         writefln("+ Hub[%d]  %s  %s  %s ", 
@@ -377,18 +377,20 @@ class PhueSystem  {
     }
     
     
-    void set_current_bulb_by_bulbnum(int bulbnum) {
+    Bulb get_bulb_by_bulbnum(int bulbnum)  {
+        // DO NOT USE except as development scaffolding. 
+        // Can't handle different hubs with bulbs of same bulb number.
         bulbindex i = 0;
         while (i < bulbs.length) {
             if (bulbs[i].bulbnum==bulbnum) {
-                icurrentbulb = i;
-                return;
+                return bulbs[i];
             }
         }
-        // else, do nothing. May have no bulbs, or i out of range.
+        return null;
     }
     
     void turn_all_bulbs(BulbState desired)  {
+        writefln("TURN ALL %d" ,desired);
         foreach (Bulb b; bulbs)  {
             b.turn(desired);
         }
@@ -404,22 +406,20 @@ class PhueSystem  {
         }
     }
     
-    void set_current_bulb_color(Color color)  {
-        if (!bulbs.length) return;
-        bulbs[icurrentbulb].set_color(color);        
-    }
 
     void list_all_bulbs()    {
+        writefln("PhuSystme.list_all_bulbs() ENTER  len(bubls[])=%d", bulbs.length);
         foreach (Bulb bulb; bulbs)  {
             bulb.describe_self_one_line();
         }
     }
     
-    void colorize_bulbs_by_digit(int idigit, bool wantbulbindex)  {
+    void colorize_bulbs_by_digit(int idigit, bool want_bulbnum)  {
         Thread.sleep( dur!("msecs")( 300 ) );    
+        writefln("COLORIZE digit %d, bulbs.len=%d", idigit, bulbs.length);
         dim_all_bulbs();
         for (bulbindex ib=0; ib<bulbs.length; ib++)  {
-            ushort n = to!ushort( (wantbulbindex)? bulbs[ib].myindex : bulbs[ib].bulbnum );
+            ushort n = to!ushort( (want_bulbnum)? bulbs[ib].bulbnum : bulbs[ib].myindex );
             ushort[3] digit;
             digit[2]=n/100;
             ushort r = to!ushort( n-100*digit[2] );
@@ -430,10 +430,10 @@ class PhueSystem  {
         Thread.sleep( dur!("msecs")( 900 ) );
     }
 
-    void animate_color_by_bulbnum()   {
-        colorize_bulbs_by_digit(2,false);
-        colorize_bulbs_by_digit(1,false);
-        colorize_bulbs_by_digit(0,false);
+    void animate_color_code(bool want_bulbnum)   {
+        colorize_bulbs_by_digit(2,want_bulbnum);
+        colorize_bulbs_by_digit(1,want_bulbnum);
+        colorize_bulbs_by_digit(0,want_bulbnum);
         for (bulbindex ib=0; ib<bulbs.length; ib++)  {
             bulbs[ib].set_color(new Color(ZEROBRIGHT));
         }
@@ -443,8 +443,13 @@ class PhueSystem  {
     void rebuild_bulbs_list() {
         bulbs.length=0;
         foreach (hub; hubs)  {
-            hub.add_all_known_to_bulbs_list();
+            writefln("Asking hub %s for its bulbs, before len=%d", hub.shortname, bulbs.length);
+            auto bb =hub.all_my_bulbs(); 
+            bulbs ~= bb;
+            writefln("bulbs.len=%d  given %s", bulbs.length, bb );
         }
+        for (bulbindex i=0; i<bulbs.length; i++)  
+                bulbs[i].myindex=i;
     }
 
 
@@ -454,7 +459,12 @@ class PhueSystem  {
         }
     }
 
-
+    Bulb find_bulb_by_index(bulbindex i)  {
+        if (i>=bulbs.length) return null;
+        return bulbs[i];
+    }
+    
+    
     Hub find_hub_by_name(string name) {
         string n = toLower(name);
         foreach (hub; hubs)  {
@@ -473,6 +483,7 @@ class PhueSystem  {
         }
          the_chosen_one.find_new_physical_bulbs();
         /*TODO*/ // don't rebuild whole list, but add just new ones
+        // for now, take the easy way.  
         rebuild_bulbs_list();
         list_all_bulbs();
         writeln("LISTED KNOWN BULBS");    
@@ -481,148 +492,120 @@ class PhueSystem  {
 }
 
 
+class Commander {
+    PhueSystem system;        // 
+    Bulb currentbulb;
+    ushort current_group;
+    ushort current_other_thing;  // etc...   bad idea?
+    // class ControllableThing -> Bulb, Group, Sequence, Show etc
+    // commands -> Controllable.exec(cmd)    ??
 
-
-bool quit_proc(PhueSystem system, string[] tokens) {
-    /* nothing, let main command loop deal with */
-    return false;
-}
-
-bool dim_proc(PhueSystem system, string[] tokens) {
-    system.dim_all_bulbs();
-    return true;
-}
-
-
-bool list_proc(PhueSystem system, string[] tokens) {
-    if (tokens.length<2 || tokens[1].toLower()=="bulbs") {
-        system.list_all_bulbs();
-    } else if (tokens[1]=="hubs")  {
-        system.list_all_hubs();
-    }
-    return true;
-}
-
-bool animate_bulbnum_proc(PhueSystem system, string[] tokens) {
-    system.animate_color_by_bulbnum();
-    return true;
-}
-
-bool turn_on_proc(PhueSystem system, string[] tokens)  {
-    system.bulbs[system.icurrentbulb].turn(BulbState.ON);
-    return true;
-}
-
-bool turn_off_proc(PhueSystem system, string[] tokens)  {
-    system.bulbs[system.icurrentbulb].turn(BulbState.OFF);
-    return true;
-}
-
-bool all_proc(PhueSystem system, string[] tokens)  {
-    if (tokens.length<2) {
-        writeln("'all' do what?");
-        return false;
-    }
-    switch (tokens[1]) {
-        case "on":  system.turn_all_bulbs(BulbState.ON); break;
-        case "off":  system.turn_all_bulbs(BulbState.OFF); break;
-        case "dim":  system.dim_all_bulbs(); break;
-        default:
-            writefln("Unrecognized command %s ", tokens[1]);
-            return false;
-    }
-    return true;
-}
-
-bool forget_proc(PhueSystem system, string[] tokens)  {
-    if (tokens.length<2)  {
-        writeln("Forget what?    valid options:\n     forget all bulbs");
-        return false;
+    
+    this(PhueSystem s) {
+        system = s;
     }
     
-    if (tokens[1]=="all" && tokens[2]=="bulbs")  {
-                foreach (hub; system.hubs)  {
-                    hub.forget_all_physical_bulbs();
-                }
-                system.bulbs.length=0;
-                return true;
+    immutable string prompt_colorizer = "\033[38;2;122;188;208m";
+    immutable string contexts_colorizer = "\033[38;2;252;188;78m";
+    immutable string normal_colorizer = "\033[0m";
+    
+    void prompt()  {
+        write(contexts_colorizer);
+        if (currentbulb) write(currentbulb.shortname, " ");
+        writef("%sphuecmd> %s", prompt_colorizer, normal_colorizer);
     }
-    return false;
-}
-
-
-
-
-bool choose_bulb_proc(PhueSystem system, string[] tokens)  {
     
-    return true;
-}
-
-bool anim_proc(PhueSystem system, string[] tokens)  {
-    system.animate_color_by_bulbnum();
-    return true;
-}
-
-
-
-struct CommandDef  {
-    immutable string cmd;
-    bool function(PhueSystem, string[] tokens)  proc;
-    immutable string descr;
-}
-
-CommandDef[] command_defs = [
-    { "quit",  &quit_proc ,   "exit phuecmd"  },
-    { "dim",   &dim_proc  ,   "make current bulb dim"  },
-    { "on",    &turn_on_proc ,"turn on currently chosen bulb"  },
-    { "off",    &turn_off_proc, "turn off currently chosen bubl"  },
-    { "all",   &all_proc,     "affect all bulbs: on / off / dim "    },
-    { "anim",  &anim_proc,    "Flash bulb numbers using color code"  },
-    { "b#",    &choose_bulb_proc, "Choose which bulb to affect" },
-    { "list",  &list_proc,   "Print list of all bulbs or hubs" },
-    { "forget",&forget_proc,  "Delete bulbs from hub, clear phuecmd Bulb List"}
-];
-
-
-
-bool execute_command(PhueSystem system, string cmdline) {
-
-    auto tokens = cmdline.split!isWhite;
-    if (tokens.length==0)  return false;
     
-    // Look for a direct match
-    string cmdlower = toLower(tokens[0]);
-    foreach (cd; command_defs)  {
-        if (cmdlower==cd.cmd) {
-            writeln("Found command defintion: ", cd);
-            cd.proc(system, tokens);
-            return true;
+    void list_stuff(string what)  {
+        switch (toLower(what))  {
+            case "bulb": case "bulbs":
+                    writefln("TO list-all-bulbs() system=%s", system);
+                    system.list_all_bulbs();
+                    break;
+            case "hub": case "hubs":
+                    system.list_all_hubs();
+                    break;
+            default:
+                break;
         }
     }
-
-    // Nope? Maybe it's a "B#" command, where # is some number
-    if (cmdlower[0]=='b' && isDigit(cmdlower[1]))  {
-        // yeah, should check all chars not just [1].
-        int n = cmdlower[1..$].to!int;
-        system.set_current_bulb_by_bulbnum(n);
-        return true;
-    }
-        
-    // Still nope?  Maybe it's a color name, xy value, sequence... 
-    // Try single digit for electronics color code
-    if (tokens[0].length==1 && isDigit(tokens[0][0]))  {
-        
-    } else if (tokens[0] in named_color_dictionary) {
-        writeln("Found named color ");
-        system.set_current_bulb_color(new Color(named_color_dictionary[tokens[0]]));
-        return true;
-    } else {
-        writefln("%s not implement or is gibberish", cmdline);
-    }
     
-    return false;
-}
+    
+    bool execute(string cmdline)  {
+        auto tokens = cmdline.split!isWhite;
+        if (tokens.length==0)  return false;
+        string cmd = toLower(tokens[0]);
+        switch (cmd) {
+            case ".":  
+                    currentbulb=null;
+                    return true;
+                    
+            case "list":
+                    if (tokens.length<2)
+                        list_stuff("bulbs");
+                    else
+                        list_stuff(tokens[1]);
+                    return true;
+                    
+            case "all":
+                    writefln(" -- ALL -- ");
+                    if (tokens.length==1) {
+                        currentbulb = null;   // indicates next on/off/color is for all bulbs
+                    } else {
+                        switch (tokens[1])  {
+                            case "on": 
+                                    system.turn_all_bulbs(BulbState.ON); 
+                                    break;
+                            case "off": 
+                                    system.turn_all_bulbs(BulbState.OFF); 
+                                    break;
+                            default:
+                                    return false;
+                        }
+                    }
+                    return true;
+                    
+            case "num":
+                    system.animate_color_code(true);
+                    return true;
+                    
+            case "index":
+                    system.animate_color_code(false);
+                    return true;
+                    
+            default: 
+                    break;
+        }
 
+        // No direct match? Maybe command is index or name of bulb?
+        if ((cmd[0]=='B' || cmd[0]=='b') && cmd.length>0 && isDigit(cmd[1]))  {
+                string therest = cmd[1..$];
+                writefln("The Rest = <<%s>> ", therest);
+                bulbindex i = therest.to!bulbindex;
+                writefln("   i=%d", i);
+                currentbulb = system.find_bulb_by_index(i);
+                if (currentbulb)  {
+                writefln("Current bulb: cmd= %s for bulbi %d=%d %s b%d-%s actions=%s", 
+                              cmd, 
+                              currentbulb.myindex, i, 
+                              currentbulb.shortname,
+                              currentbulb.bulbnum, currentbulb.myhub.shortname,
+                              tokens[1..$]);
+                }else{
+                    writefln("No bulb of that number");
+                    return false;
+                }
+                return true;
+        }
+
+        // Not like "B12", maybe is a bulb's name?
+        
+        // No?  Maybe is a color name?
+        //ColorPalette currentpal = null;
+        
+        return false;
+    }
+}
 
 
 int main(string[] args)  {
@@ -646,16 +629,16 @@ int main(string[] args)  {
     system.add(hub2);
     system.rebuild_bulbs_list();
     
+    Commander commander = new Commander(system);
     
     bool running = true;
     while (running)  {
-        writef("phuecmd B%d> ", system.icurrentbulb);        
+        commander.prompt();
         auto cmdline = readln().chomp.strip;
-        
         if (cmdline=="quit") {
             running=false;
         } else {
-            execute_command(system, cmdline);
+            commander.execute(cmdline);
         }
     }
     
