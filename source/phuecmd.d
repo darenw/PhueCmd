@@ -599,9 +599,18 @@ class Commander {
         }
 
         // Not like "B12", maybe is a bulb's name?
+        /*TODO*/  // bulb names defined in Bulb but not really used, only shown (for now)
         
         // No?  Maybe is a color name?
-        //ColorPalette currentpal = null;
+        // current palette ... /*TODO*/
+        if (tokens[0].length==1 && isDigit(tokens[0][0]))  {
+            if (currentbulb) {
+                ubyte n = tokens[0].to!ubyte;
+                currentbulb.set_color(color_code_colors[n]);
+
+            }
+        }
+        
         
         return false;
     }
