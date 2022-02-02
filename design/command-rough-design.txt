@@ -1,146 +1,130 @@
 Draft - subject to change, possibly lots of change!
 
 
-REFERRING TO VARIOUS ENTITIES
 
-H       Hub     H1 H2 H3
+
+ENTITIES ================
+
+H       Hub     
 B       Bulb
-G       Group of bulbs
+G       Group of bulbs   
 L       Location
 C       Color
-P       Palette - set of colors
+P       Palette - a set of colors
 A       Assignment - what color or sequence goes to what bulb
-S       Sequence   
+S       Sequence   - series of colors and timing to be played out on bulbs
 
 
 Due to associations built up using phuecmd, one may substitue one type of thing for another, for example a location for a bulb when setting a color, assuming bulbs have been assigned to locations.
 
+May spell out 'bulb' or just letter B
 
-
-FOCUS ATTENTION ------
-specify a hub, bulb, ... to work with the next few commands
-
-H1       focused on Hub #1
-B35      focus on bulb 35
-
-
-???
-HH       all hubs
-BB       all bulbs
-
-.       stop context 
+Case insensitive:   a = A = Assignment,  B = b = Bulb = bulb, ...
 
 
 
-list all hubs  
-list HH        -- list all hubs
+SPECIFIC ENTITY =================
 
 
-list BB        -- list all bulbs for all hubs or just for current hub
-list GG     list all bulb groups
-   ... etc ...
+b12             - by index in phuecmd's Bulb List,  1 to N 
+b
+kitchentop      - a bulb named "kitchentop" 
+bb              - short for "all bulbs"
 
 
-Find out stuff about one bulb, what bulbs are in a group, etc
-
-B4?          -- question mark spills current status, color, bulb serial num...
-Gkitchen ?   -- list all bulbs in this group, whatever other info is in group
-                 note space or not, either okay
+kitchentop      - names - lookup in colors, bulbs, locations, ...
+L"kitchentop"   -- to be explicitly a Location. Quotes optional. 
 
 
+COLORS -----------------------------
 
-SPECIFYING COLORS --------
-
----- state an exact color -----
-
-#rrggbb web style (make assumptions RGB spaces)
-
-R O Y G C B V P     Red, Yellow, ...  Purple (1/2way CIE purple line)
-RO   RRO      50-50 red orange, more red than orange
-xy 0.355 0.515
-
-30%R  30%#FF0000    red at 1/3 brightness
-R/3                 red at 1/3 brightness
-dimgold       by names you defined (none are pre-built-in) (or provide some?)
-
-
-C bumbum = GGB dim        define a color name
-C dimgold = gold / 3      
-P xmasshow = bumbum gold dimgold berryred oldred dimred hotyellow hotwhite dimwhite jollygreen goodgreen forest funkypurple deadgraygoo 
+red           -- built-in names, default palette, or names in current palette
+bri=23.4      -- set brightness (keep x,y)  0 to 100   (converted to Hue's 0 to 255)
+bri50         -- equal sign optional. easier to tap in but harder to read
+x=.456 y=.276    -- set CIE x,y  (keeps brightness same)
+x.456y.276    -- set CIE x,y with less fingertip wear
+x.546         -- set x (no change y)
+x+.005        -- adjust x by this much
+y-.011        
+bloodred s-33% y+.01  -- start with "bloodred", decrease its sat, nudge its CIE y  up
+(40% olive 20% funkyyellow %% dblue)   mix two or more colors. %%="whatever's left"
 
 
 
---- modify colors ----
+BASIC COMMAND NOTION ==============================
 
-((color)) + x%      brighter  (change "bri")
-((color)) - x%      dimmer
-((color)) + x%G     move x% toward "pure" Green 
-((color)) + x%((color))   .. toward some other color. 
-                   100% is totally other color
+State an entity, then a property or action
 
-YGG-60%sat    olive green: yellow-green more green, cut saturation 60%
+phuecmd>  bulb23  red          -- tell some entity (bulb #23) to turn red
+phuecmd>  bulb23  +11%         -- tell it be brighter by 11%
+phuecmd>  bulb23  num          -- tell it to flash its bulbnum as color code
 
 
-THEORY   (???)  wip...
- (color) (op)(color) (op)(color) ... 
+Save tedium writing commands by just stating an entity, then all following
+commands will be assumed to apply to that entity.
 
- (color)  (op)    not followed by a color:  
-	                assume max white as target color
- (op)(color)      no initla color: start with zero black. use: "30%R"
+End the context with a dot "." command
 
-	where	
-		color =   rgbhex, colorletters, named color, ...?...
-		op    =   
-			+num%  -   change to/from given color or white
-			+num%sat   increase/decrease saturation
-			num%   blend in this much new color or white
-			/num   dimmer ("bri" channel, no x,y shift)
-                                  (never has target color)
+phuecmd>  bulb12               -- deal with bulb 12 the next few commands
+B12 phuecmd>  red
+B12 phuecmd>  -25%
+B12 phuecmd>  num 
+B12 phuecmd>  .                -- end bulb 12 context
+phuecmd> 
 
-
-
-DEFINE A COLOR NAME: 
-
-C dimmerred = xmasred - 18%
-
---------- WORKING THE SYSTEM ------
+phuecmd> all bulbs             -- next commands apply to all bulbs
+BB phuecmd> yellow
+BB phuecmd> off 
+BB phuecmd> .
 
 
-B15 33%B         bulb #15 to show blue at 1/3 brightness
-B16 B15 20%V     bulb #16: be same as bulb 15 nudged 20% toward pure violet
+PROMPT-----------
+
+User may have a currently selected bulb, hub or other things. 
+These are listed in the prompt.
+
+phuecmd>
+B14 phuecmd>
+H2345 B14 phuecmd>
+all phuecmd>             
+
+
+
+COLOR & PAL COMMANDS ------------------
+
+phuecmd> color darkblarf = bri=13 x=.343 y=.643    -- defines a color 
+phuecmd> new pal "xmas"           
+phuecmd> xmas
+xmas phuecmd> color endgreen = (60%green %%black)   -- new color goes into "xmas" palette
+xmas phuecmd> color endgreen x-.006                 -- nudge that color tiny bit bluer
+
+phuecmd> forget pal "churchframes"           -- don't need this old palette any more
 
 
 
 
-
------------ SYSTEM -----------
-RESET, DIAGNOSE, VERIFY, CLEARING, FORGETTING STUFF 
+BULB COMMANDS ------------------------
 
 
-blink H2           -- blinks all lights attached to hub #2
-blink Bkitchentop  -- blinks bulb named "kitchentop"
-blink ...          -- etc.
-stop              -- stop blinking. also, stops when new 'show' cmd 
+phuecmd> b12  <color> <on/off> <flash/numcode/...>   ... 
+
+May supply as many as you like in one line
+
+   	red          -- set color
+	+11%         -- brighter
+	s+22%
 
 
 
-all off           -- turns off all bulbs
- 		         (remembers all bulb colors, place in show seq, ..)
-all on     	  -- go back to as you were before "all off"
-all on white      -- turns on all bulbs all hubs, specified color 
-                         (default 70%maxwhite ??)
-all H3 50%green   -- turns on all bulbs only on hub #3 to half-bright green
+LOCATIONS ... -----------------------
 
-forget all hubs   -- total amnesia,  
-forget hub3        
-find  hubs       -- runs nmap to find all Philips Hue hubs on LAN
-find  hubs eno1       you may need to provide ethernet device name
+May state a location anywhere you'd name a bulb, visa versa
 
-forget bulbs     -- delete all Bulbs for current hub
-forget all bulbs -- delete Bulbs for all hubs known
-find bulbs       -- has hub report all bulbs it knows about, creates Bulbs
+phuecmd> loc <name>
+phue
 
 
+phuecmd> 
 
 
 ====== REMOTE CONTROL - INTEPROCESS COMMUNICATION =======
