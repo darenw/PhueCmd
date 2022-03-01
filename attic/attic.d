@@ -16,3 +16,22 @@
         //auto stuff = tcpsock.receive(buf);
         //writeln(stuff);
     }
+
+
+FORGET
+                    if (tokens.length<2)  {
+                        writeln("Forget what? bulbs, hubs, palette...?");
+                        continue;
+                    }
+                    switch (tokens[1])  {
+                        case "all-bulbs":
+                                foreach (hub; system.hubs)  {
+                                    hub.forget_all_physical_bulbs();
+                                }
+                                system.bulbs.length=0;
+                                break;
+                        default:
+                                continue;
+                    }
+                    break;
+                    
