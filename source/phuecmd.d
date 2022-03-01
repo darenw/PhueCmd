@@ -20,12 +20,10 @@ import std.net.curl;
 //import std.thread;
 import core.thread;
 
+import phuecolor;
+import palette;
 import hub;
 import bulb;
-import phuecolor;
-
-alias groupindex = ushort;    // 
-alias paletteindex = ushort;
 
 
 
@@ -74,63 +72,6 @@ class Group    {
         members[$-1] = ibulb;
     }
 }
-
-
-struct NamedColorDef  {
-    CIEColor cie;
-    string name;  
-}
-
-
-
-// Define some handy "obvious" colors, just to have some useful quick
-// functionality before dealing with palettes, sequences, good design.
-// Note: intent with names is to be case-don't-matter, but
-// print out colors as camel case
-NamedColorDef[] named_colors = [
-    { cie:{1.0, 0.333, 0.333},  name:"equal"},  // Equal Energy White
-    { cie:{1.00, 0.381, 0.370},   name:"white"},
-    { cie:{0.25, 0.381, 0.380},   name:"gray"},
-    { cie:{1.00, 0.482, 0.440},   name:"yellow"},
-    { cie:{0.17, 0.556, 0.410},   name:"brown"},
-    { cie:{0.75, 0.280, 0.451},   name:"green"},
-    { cie:{0.76, 0.205, 0.185},   name:"blue"},
-    { cie:{0.50, 0.221, 0.115},   name:"violet"},
-    { cie:{0.70, 0.321, 0.12},   name:"purple"},
-    { cie:{0.83, 0.381, 0.13},   name:"magenta"},
-    { cie:{0.70, 0.441, 0.320},   name:"scent"},
-    { cie:{0.50, 0.505, 0.255},   name:"coldred"},
-    { cie:{0.81, 0.601, 0.320},   name:"red"},
-    { cie:{1.00, 0.262, 0.300},   name:"sky"},
-    { cie:{0.16, 0.386, 0.430},   name:"olive"},
-    { cie:{0.91, 0.584, 0.379},   name:"orange"},
-];
-
-
-CIEColor[string] named_color_dictionary;
-
-void init_named_colors() {
-    if (named_color_dictionary.length==0)  {
-        foreach (NamedColorDef z; named_colors)  {
-            named_color_dictionary[z.name]=z.cie;
-        }
-    }    
-}
-
-
-CIEColor[10] color_code_colors = [
-    /* 0 */  { 0.10, 0.33, 0.33},
-    /* 1 */  { 0.26, 0.54, 0.39},
-    /* 2 */  { 0.70, 0.63, 0.32},
-    /* 3 */  { 0.87, 0.56, 0.39},
-    /* 4 */  { 0.98, 0.48, 0.46},
-    /* 5 */  { 0.70, 0.30, 0.48},
-    /* 6 */  { 0.61, 0.18, 0.19},
-    /* 7 */  { 0.64, 0.22, 0.12},
-    /* 8 */  { 0.30, 0.36, 0.36},
-    /* 9 */  { 0.98, 0.33, 0.33},
-];
-
 
 
 
@@ -212,7 +153,7 @@ class PhueSystem  {
             ushort r = to!ushort( n-100*digit[2] );
             digit[1]=r/10;
             digit[0]= to!ushort( r-10*digit[1] );
-            bulbs[ib].set_color(new Color(color_code_colors[digit[idigit]]));
+            bulbs[ib].set_color(new Color( color_code_colors[digit[idigit]].cie ) );
         }
         Thread.sleep( dur!("msecs")( 900 ) );
     }
@@ -286,7 +227,6 @@ class Commander {
     // class ControllableThing -> Bulb, Group, Sequence, Show etc
     // commands -> Controllable.exec(cmd)    ??
 
-    
     this(PhueSystem s) {
         system = s;
     }
@@ -390,7 +330,7 @@ class Commander {
         if (tokens[0].length==1 && isDigit(tokens[0][0]))  {
             if (currentbulb) {
                 ubyte n = tokens[0].to!ubyte;
-                currentbulb.set_color(color_code_colors[n]);
+                currentbulb.set_color(color_code_colors[n].cie );
 
             }
         }
@@ -401,7 +341,11 @@ class Commander {
 
 
 int main(string[] args)  {
-    init_named_colors();    
+
+    initialize_palettes();
+    writefln("Color palettes loaded: %d", palettes.length);
+    
+
     PhueSystem system = new PhueSystem;
     
     // Hardcoded for my actual hardware at this time

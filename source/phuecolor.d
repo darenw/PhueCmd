@@ -2,7 +2,8 @@
 //
 // Defines basic types, pre-defined named colors, handy functions for dealing with colors
 
-
+// DESIGN QUESION: Makes sense to have .name in Color?  Keep color names in Palette instead?
+// hmmm... 
 
 
 struct HSVColor {
@@ -24,11 +25,7 @@ immutable max_color_temp = 20000;  // another guess. no appearance change beyond
 
 
 class Color   {
-    string name;
-    CIEColor cie;
-    
-    this(string letters) { // for example  "RRV" for red, little bit violet
-    }
+    CIEColor cie; 
     
     this(float L, float x, float y)   {
         cie.x=x, cie.y=y, cie.L=L;    
