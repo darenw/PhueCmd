@@ -29,24 +29,23 @@ alias bulbindex = ushort;     // unique id number within a multi-hub PhueSystem
 class Bulb {
     bulbindex myindex;   // number unique among all bulbs, all hubs in a PhueSystem
     Hub myhub;
-    string name, shortname, descr;
+    string name, descr;
     BulbNumber num;        // number assigned by hub
     CIEColor latest_color;
     HSVColor latest_color_hsv;
     float    latest_color_temp;
     BulbState     latest_onoff_state;
     
-    this(Hub hub, string name0, string shortname0, BulbNumber bnum) {
+    this(Hub hub, string name0,  BulbNumber bnum) {
         /*TODO*/ // check if any existing bulb has same bulbnum
         myhub = hub;
         name=name0;
-        shortname=shortname0;
         num = bnum;
     }
     
     void describe_self_one_line()   {
         writefln("bulb[%d] hub[%s] bnum=%d   %s %s", 
-            myindex, myhub.shortname, num, shortname, descr);
+            myindex, myhub.name, num, name, descr);
     }
     
     
@@ -59,12 +58,12 @@ class Bulb {
     
     
     void send(string jsoncmd)  {
-    writefln("Bulb[bnum=%d,i=%d].SEND(str) %s  myhub.name=%s", num, myindex, jsoncmd, myhub.shortname);
+    writefln("Bulb[bnum=%d,i=%d].SEND(str) %s  myhub.name=%s", num, myindex, jsoncmd, myhub.name);
         myhub.send_bulb_settings(num, jsoncmd);
     }
 
     void send(JSONValue cmd)  {
-    writefln("Bulb[bnum=%d,i=%d].SEND(json) %s myhub:name=%s", num, myindex, cmd,myhub.shortname);
+    writefln("Bulb[bnum=%d,i=%d].SEND(json) %s myhub:name=%s", num, myindex, cmd,myhub.name);
         myhub.send_bulb_settings(num, cmd);
     }
 

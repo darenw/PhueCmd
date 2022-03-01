@@ -24,7 +24,6 @@ import hub;
 import bulb;
 import phuecolor;
 
-alias bulbindex = ushort;     // unique id number within a multi-hub system
 alias groupindex = ushort;    // 
 alias paletteindex = ushort;
 
@@ -39,13 +38,12 @@ Bulb[] all_bulbs_of_hub(Hub hub)   {
     foreach (string bkey, JSONValue binfo; lightslist)  {
         ushort bnum = bkey.to!ushort;
         JSONValue bulbinfo = lightslist[bkey];
-        string boringname = format("H%sB%d", hub.shortname, bnum);
-        string longername = format("Hub %s-Bulb%d", hub.name, bnum);
+        string bname = format("H%sB%d", hub.name, bnum);
         JSONValue state = bulbinfo["state"];
-        Bulb b = new Bulb(hub, longername, boringname, bnum);
+        Bulb b = new Bulb(hub,  bname, bnum);
         writefln(
            "  + bulb[%d] hub %s, bnum=%d   %s %s   on:%s bri:%s  reachable:%s ", 
-                b.myindex,  hub.shortname,  bnum,
+                b.myindex,  hub.name,  bnum,
                 bulbinfo["modelid"],
                 bulbinfo["name"],
                 state["on"], state["bri"], state["reachable"]
@@ -232,7 +230,7 @@ class PhueSystem  {
     void rebuild_bulbs_list() {
         bulbs.length=0;
         foreach (hub; hubs)  {
-            writefln("Asking hub %s for its bulbs, before len=%d", hub.shortname, bulbs.length);
+            writefln("Asking hub %s for its bulbs, before len=%d", hub.name, bulbs.length);
             auto bb =all_bulbs_of_hub(hub); 
             bulbs ~= bb;
             writefln("bulbs.len=%d  given %s", bulbs.length, bb );
@@ -258,7 +256,6 @@ class PhueSystem  {
         string n = toLower(name);
         foreach (hub; hubs)  {
             if (toLower(hub.name)==n) return hub;
-            if (toLower(hub.shortname)==n) return hub;
         } 
         return null;
     }
@@ -300,7 +297,7 @@ class Commander {
     
     void prompt()  {
         write(contexts_colorizer);
-        if (currentbulb) write(currentbulb.shortname, " ");
+        if (currentbulb) write(currentbulb.name, " ");
         writef("%sphuecmd> %s", prompt_colorizer, normal_colorizer);
     }
     
@@ -375,8 +372,8 @@ class Commander {
                 writefln("Current bulb: cmd= %s for bulbi %d=%d %s b%d-%s actions=%s", 
                               cmd, 
                               currentbulb.myindex, i, 
-                              currentbulb.shortname,
-                              currentbulb.num, currentbulb.myhub.shortname,
+                              currentbulb.name,
+                              currentbulb.num, currentbulb.myhub.name,
                               tokens[1..$]);
                 }else{
                     writefln("No bulb of that number");
@@ -413,12 +410,12 @@ int main(string[] args)  {
     Hub hub1 = new Hub("00:17:88:21:8A:2E",
              "192.168.11.41",
              "78g2lrMNHZHZFozjDJ7z7lneQhl8guZpzssU0HIr",
-             "Hub1-1537-2016",  "hub1"
+             "Hub1-1537"
              );
     Hub hub2 = new Hub("00:17:88:4D:97:4D",
              "192.168.11.10",
              "VHQitrMnCUvVb4YLmuTmYQvO54ZjUgihgSJGKTFy",
-             "Hub2-1707-2017",   "hub2"
+             "Hub2-1707"
              );
 
     system.add(hub1);

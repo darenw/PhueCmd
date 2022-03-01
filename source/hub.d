@@ -27,15 +27,14 @@ class Hub  {
     string macaddr;      // what's best, ubyte[]? string? other?
     string ipaddr;       // something like "12.34.56.78"
     string password;     // mile long string of base 62
-    string name, shortname;
+    string name;
     string myurl;        // for easy routine use of get/post/put/delete
     
-    this(string mac0, string ip0, string pw0, string name0, string shortname0) {
+    this(string mac0, string ip0, string pw0, string name0) {
         macaddr=mac0;
         ipaddr=ip0;
         password=pw0;
         name=name0;
-        shortname=shortname0;
         myurl = format("http://%s/api/%s/", 
                         ipaddr, password);
     }
@@ -44,8 +43,7 @@ class Hub  {
     }
     
     void describe_self_one_line()   {
-        writefln("hub %s  %s  %s (%s)", 
-               ipaddr,  macaddr, name, shortname);
+        writefln("hub %s  %s  %s", ipaddr,  macaddr, name);
     }
     
     
@@ -95,7 +93,7 @@ writefln("Hub:sending(str) to bnum=%d <<%s>>((%s)) myurl %s", bulbnum, b, jsoncm
         JSONValue lightslist = parseJSON(spewage);
         foreach (string bkey, JSONValue binfo; lightslist)  {
             int bnum = bkey.to!int;
-            writef("deleting bulb num %s from hub %s (%s)... ", bnum, shortname, ipaddr);
+            writef("deleting bulb num %s from hub %s (%s)... ", bnum, name, ipaddr);
             del( myurl ~ "lights/" ~ bkey);
             writefln("gone!");
         }
