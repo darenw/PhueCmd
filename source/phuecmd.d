@@ -21,7 +21,8 @@ import std.net.curl;
 import core.thread;
 
 import hub;
-
+import bulb;
+import phuecolor;
 
 alias bulbindex = ushort;     // unique id number within a multi-hub system
 alias groupindex = ushort;    // 
@@ -55,75 +56,6 @@ Bulb[] all_bulbs_of_hub(Hub hub)   {
 }
 
 
-
-
-enum BulbState { OFF, ON }
-
-class Bulb {
-    bulbindex myindex;   // number unique among all bulbs, all hubs in a PhueSystem
-    Hub myhub;
-    string name, shortname, descr;
-    BulbNumber num;        // number assigned by hub
-    CIEColor latest_color;
-    HSVColor latest_color_hsv;
-    float    latest_color_temp;
-    BulbState     latest_onoff_state;
-    
-    this(Hub hub, string name0, string shortname0, BulbNumber bnum) {
-        /*TODO*/ // check if any existing bulb has same bulbnum
-        myhub = hub;
-        name=name0;
-        shortname=shortname0;
-        num = bnum;
-    }
-    
-    void describe_self_one_line()   {
-        writefln("bulb[%d] hub[%s] bnum=%d   %s %s", 
-            myindex, myhub.shortname, num, shortname, descr);
-    }
-    
-    
-    void turn(BulbState desired)   {
-        writefln("Bulb.turn(%d)   msg=%s", desired,  (desired==BulbState.ON)? "{\"on\":true}" : "{\"on\":false}" );
-        send( (desired==BulbState.ON)? "{\"on\":true}" : "{\"on\":false}" );
-        // if successful, 
-            latest_onoff_state = desired;
-    }
-    
-    
-    void send(string jsoncmd)  {
-    writefln("Bulb[bnum=%d,i=%d].SEND(str) %s  myhub.name=%s", num, myindex, jsoncmd, myhub.shortname);
-        myhub.send_bulb_settings(num, jsoncmd);
-    }
-
-    void send(JSONValue cmd)  {
-    writefln("Bulb[bnum=%d,i=%d].SEND(json) %s myhub:name=%s", num, myindex, cmd,myhub.shortname);
-        myhub.send_bulb_settings(num, cmd);
-    }
-
-    void set_color(Color color)   {
-        int bri = cast(int)floor(0.5+255*color.cie.L);
-        string cmd = format(`{"bri":%d,"xy":[%.3f,%.3f]}`, bri,  color.cie.x, color.cie.y);
-        send(cmd);
-    }
-    
-    void set_color(CIEColor cie)  {
-        set_color(new Color(cie));
-    }
-    
-    void set_color_BAD(Color color)  {
-        JSONValue cmd = [ "on": "true"];
-        writeln("aaaaa json=",  cmd);
-        cmd.object["bri"] = JSONValue(color.cie.L);
-        writeln("bbbbbb json=", cmd);
-        cmd.object["xy"] = JSONValue( [color.cie.x, color.cie.y] );
-        writeln("ccccc  json=", cmd);
-        send(cmd);
-        writeln("ssssss");
-    }
-}
-
-
 class Group    {
     
     bulbindex[] members;
@@ -144,70 +76,6 @@ class Group    {
         members[$-1] = ibulb;
     }
 }
-
-
-struct HSVColor {
-    float H, S, V;
-}
-
-struct CIEColor  {
-    float L,x,y;
-}
-
-immutable CIEColor MAXWHITE   = {1.0, 0.351, 0.350};
-immutable CIEColor DIMGRAY    = {0.1, 0.351, 0.350};
-immutable CIEColor ZEROBRIGHT = {0.0, 0.333, 0.333};
-immutable CIEColor MAXGREEN   = {1.0, 0.300, 0.59};
-
-immutable min_color_temp =  1400;  // ?? min somewhere around here
-immutable max_color_temp = 20000;  // another guess. no appearance change beyond this.
-
-
-class Color   {
-    string name;
-    CIEColor cie;
-    
-    this(string letters) { // for example  "RRV" for red, little bit violet
-    }
-    
-    this(float L, float x, float y)   {
-        cie.x=x, cie.y=y, cie.L=L;    
-    }
-    
-    this(CIEColor given)  {
-        cie = given;
-    }
-    
-        
-    Color create_brighter(float brightnes_change_percent)  const {
-        return new Color(cie); 
-    }
-    
-    Color mix(float percent_toward, Color target) const  {
-        return new Color(1.0, 0.33, 0.3);// dumb place-holder /*TODO*/
-    }
-}
-
-
-CIEColor blackbody(float temp)   {
-	// https://en.wikipedia.org/wiki/Planckian_locus 
-	float m = 1000.0/temp;
-	float x,y;
-	
-	if (temp<=4000.0)  {
-		x = ((-0.2661239*m - 0.2343589)*m + 0.8776956)*m + 0.179910;
-		if (temp<2222.0)  
-			y = ((-1.1063814*x - 1.34811020)*x + 2.18555832)*x - 0.20219683;
-		else
-			y = ((-0.9549476*x - 1.37418593)*x + 2.09137015)*x - 0.16748867;
-		
-	}else{
-		x = ((-3.0258469*m + 2.10703790)*m + 0.2226347)*m + 0.240390;
-		y = (( 3.0817580*x - 5.87338670)*x + 3.75112997)*x - 0.37001483;
-	}
-	return CIEColor(1.0, x, y);
-}
-
 
 
 struct NamedColorDef  {

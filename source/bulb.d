@@ -9,8 +9,84 @@
 // this is up to the Hub object which in most use cases there is only one of.
 // Hub knows the IP address and other mumbo-jumbo to perform the http REST work.
 
+import std.stdio;
+import std.string;
+import std.conv;
+import std.format;
+import std.json;
+import std.math;
+
+import hub;
+import phuecolor;
 
 
-/*TODO*/ // steal the Bulb code out of the original monster file phuecmd.d
- 
- 
+enum BulbState { OFF, ON }
+
+
+alias bulbindex = ushort;     // unique id number within a multi-hub PhueSystem
+
+
+class Bulb {
+    bulbindex myindex;   // number unique among all bulbs, all hubs in a PhueSystem
+    Hub myhub;
+    string name, shortname, descr;
+    BulbNumber num;        // number assigned by hub
+    CIEColor latest_color;
+    HSVColor latest_color_hsv;
+    float    latest_color_temp;
+    BulbState     latest_onoff_state;
+    
+    this(Hub hub, string name0, string shortname0, BulbNumber bnum) {
+        /*TODO*/ // check if any existing bulb has same bulbnum
+        myhub = hub;
+        name=name0;
+        shortname=shortname0;
+        num = bnum;
+    }
+    
+    void describe_self_one_line()   {
+        writefln("bulb[%d] hub[%s] bnum=%d   %s %s", 
+            myindex, myhub.shortname, num, shortname, descr);
+    }
+    
+    
+    void turn(BulbState desired)   {
+        writefln("Bulb.turn(%d)   msg=%s", desired,  (desired==BulbState.ON)? "{\"on\":true}" : "{\"on\":false}" );
+        send( (desired==BulbState.ON)? "{\"on\":true}" : "{\"on\":false}" );
+        // if successful, 
+            latest_onoff_state = desired;
+    }
+    
+    
+    void send(string jsoncmd)  {
+    writefln("Bulb[bnum=%d,i=%d].SEND(str) %s  myhub.name=%s", num, myindex, jsoncmd, myhub.shortname);
+        myhub.send_bulb_settings(num, jsoncmd);
+    }
+
+    void send(JSONValue cmd)  {
+    writefln("Bulb[bnum=%d,i=%d].SEND(json) %s myhub:name=%s", num, myindex, cmd,myhub.shortname);
+        myhub.send_bulb_settings(num, cmd);
+    }
+
+    void set_color(Color color)   {
+        int bri = cast(int)floor(0.5+255*color.cie.L);
+        string cmd = format(`{"bri":%d,"xy":[%.3f,%.3f]}`, bri,  color.cie.x, color.cie.y);
+        send(cmd);
+    }
+    
+    void set_color(CIEColor cie)  {
+        set_color(new Color(cie));
+    }
+    
+    void set_color_BAD(Color color)  {
+        JSONValue cmd = [ "on": "true"];
+        writeln("aaaaa json=",  cmd);
+        cmd.object["bri"] = JSONValue(color.cie.L);
+        writeln("bbbbbb json=", cmd);
+        cmd.object["xy"] = JSONValue( [color.cie.x, color.cie.y] );
+        writeln("ccccc  json=", cmd);
+        send(cmd);
+        writeln("ssssss");
+    }
+}
+
