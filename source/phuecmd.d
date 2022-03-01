@@ -16,149 +16,70 @@ import std.algorithm.searching;
 import std.algorithm.comparison;
 import std.json;
 import std.net.curl;
+
 //import std.thread;
 import core.thread;
 
+import hub;
 
 
-alias bulbnumber = ushort;    // number of bulb known hub
 alias bulbindex = ushort;     // unique id number within a multi-hub system
 alias groupindex = ushort;    // 
 alias paletteindex = ushort;
 
 
 
-
-
-class Hub  {
-    string macaddr;      // what's best, ubyte[]? string? other?
-    string ipaddr;       // something like "12.34.56.78"
-    string password;     // mile long string of base 62
-    string name, shortname;
-    string myurl;        // for easy routine use of get/post/put/delete
-    
-    this(string mac0, string ip0, string pw0, string name0, string shortname0) {
-        macaddr=mac0;
-        ipaddr=ip0;
-        password=pw0;
-        name=name0;
-        shortname=shortname0;
-        myurl = format("http://%s/api/%s/", 
-                        ipaddr, password);
+// formerly all_my_bulbs() 
+Bulb[] all_bulbs_of_hub(Hub hub)   { 
+    /*TODO*/ // DANGER! Does not check if bulb already in bulbs[]
+    Bulb[] bulbs;
+    auto spewage = get( hub.myurl ~ "lights/");
+    JSONValue lightslist = parseJSON(spewage);
+    foreach (string bkey, JSONValue binfo; lightslist)  {
+        ushort bnum = bkey.to!ushort;
+        JSONValue bulbinfo = lightslist[bkey];
+        string boringname = format("H%sB%d", hub.shortname, bnum);
+        string longername = format("Hub %s-Bulb%d", hub.name, bnum);
+        JSONValue state = bulbinfo["state"];
+        Bulb b = new Bulb(hub, longername, boringname, bnum);
+        writefln(
+           "  + bulb[%d] hub %s, bnum=%d   %s %s   on:%s bri:%s  reachable:%s ", 
+                b.myindex,  hub.shortname,  bnum,
+                bulbinfo["modelid"],
+                bulbinfo["name"],
+                state["on"], state["bri"], state["reachable"]
+                );
+        bulbs ~= b;
     }
-    
-    ~this() {
-    }
-    
-    void describe_self_one_line()   {
-        writefln("hub %s  %s  %s (%s)", 
-               ipaddr,  macaddr, name, shortname);
-    }
-    
-    
-    void send_bulb_settings(bulbnumber bulbnum, JSONValue cmd)  {
-        string b = format("lights/%d/state", bulbnum);
-writefln("Hub:sending(json) to bnum=%d <<%s>>((%s))", bulbnum, b, cmd);
-        put(myurl ~ b, cmd.toString);
-        
-    }
-
-    void send_bulb_settings(bulbnumber bulbnum, string jsoncmd)  {
-        string b = format("lights/%d/state", bulbnum);
-writefln("Hub:sending(str) to bnum=%d <<%s>>((%s)) myurl %s", bulbnum, b, jsoncmd, myurl);
-        put( myurl ~ b, jsoncmd);
-    }
-    
-    
-    void get_all_hub_info()   {
-        // https://dlang.org/phobos/std_format.html 
-        auto stuff = get(myurl);
-        writeln(stuff);
-    }
-    
-    
-    void find_new_physical_bulbs()  {
-        writeln("Requesting search for new bulbs...");
-        
-        // An http POST with no body triggers hub into seeking new bulbs
-        auto z = post( myurl ~ "lights", "" );
-        Thread.sleep( dur!("msecs")( 600 ) );
-        
-        // Obtain list of newly found bulbs with GET lights/new
-        auto newbulbs = JSONValue( get( myurl ~ "lights/new") );
-        string newbulbnums = "";
-        int count=0;
-        foreach (string k, JSONValue x; newbulbs) {
-            writef(" <<%s>> ", k);
-            newbulbnums ~= format(" %d", k.to!int);
-            count++;
-        }
-        writefln("Found %d new bulbs since %s:  %s", 
-            count, newbulbs["lastscan"],  newbulbnums);
-    }    
-    
-    void forget_all_physical_bulbs()  {
-        auto spewage = get( myurl ~ "lights/");
-        JSONValue lightslist = parseJSON(spewage);
-        foreach (string bkey, JSONValue binfo; lightslist)  {
-            int bnum = bkey.to!int;
-            writef("deleting bulb num %s from hub %s (%s)... ", bnum, shortname, ipaddr);
-            del( myurl ~ "lights/" ~ bkey);
-            writefln("gone!");
-        }
-
-    }
-
-    
-    Bulb[] all_my_bulbs()   {
-        /*TODO*/ // DANGER! Does not check if bulb already in bulbs[]
-        Bulb[] mybulbs;
-        auto spewage = get( myurl ~ "lights/");
-        JSONValue lightslist = parseJSON(spewage);
-        foreach (string bkey, JSONValue binfo; lightslist)  {
-            ushort bnum = bkey.to!ushort;
-            JSONValue bulbinfo = lightslist[bkey];
-            string boringname = format("H%sB%d", shortname, bnum);
-            string longername = format("Hub %s-Bulb%d", name, bnum);
-            JSONValue state = bulbinfo["state"];
-            Bulb b = new Bulb(this, longername, boringname, bnum);
-            writefln("  + bulb[%d] hub %s, bnum=%d   %s %s   on:%s bri:%s  reachable:%s ", 
-                    b.myindex,  shortname,  bnum,
-                    bulbinfo["modelid"],
-                    bulbinfo["name"],
-                    state["on"], state["bri"], state["reachable"]
-                    );
-            mybulbs ~= b;
-        }
-        return mybulbs;
-    }
+    return bulbs;
 }
+
 
 
 
 enum BulbState { OFF, ON }
 
 class Bulb {
-    bulbindex myindex;
+    bulbindex myindex;   // number unique among all bulbs, all hubs in a PhueSystem
     Hub myhub;
     string name, shortname, descr;
-    ushort bulbnum;        // number assigned by hub
+    BulbNumber num;        // number assigned by hub
     CIEColor latest_color;
     HSVColor latest_color_hsv;
     float    latest_color_temp;
     BulbState     latest_onoff_state;
     
-    this(Hub hub, string name0, string shortname0, ushort bulbnum0) {
+    this(Hub hub, string name0, string shortname0, BulbNumber bnum) {
         /*TODO*/ // check if any existing bulb has same bulbnum
         myhub = hub;
         name=name0;
         shortname=shortname0;
-        bulbnum = bulbnum0;
+        num = bnum;
     }
     
     void describe_self_one_line()   {
         writefln("bulb[%d] hub[%s] bnum=%d   %s %s", 
-            myindex, myhub.shortname, bulbnum, shortname, descr);
+            myindex, myhub.shortname, num, shortname, descr);
     }
     
     
@@ -171,13 +92,13 @@ class Bulb {
     
     
     void send(string jsoncmd)  {
-    writefln("Bulb[bnum=%d,i=%d].SEND(str) %s  myhub.name=%s", bulbnum, myindex, jsoncmd,myhub.shortname);
-        myhub.send_bulb_settings(bulbnum, jsoncmd);
+    writefln("Bulb[bnum=%d,i=%d].SEND(str) %s  myhub.name=%s", num, myindex, jsoncmd, myhub.shortname);
+        myhub.send_bulb_settings(num, jsoncmd);
     }
 
     void send(JSONValue cmd)  {
-    writefln("Bulb[bnum=%d,i=%d].SEND(json) %s myhub:name=%s", bulbnum, myindex, cmd,myhub.shortname);
-        myhub.send_bulb_settings(bulbnum, cmd);
+    writefln("Bulb[bnum=%d,i=%d].SEND(json) %s myhub:name=%s", num, myindex, cmd,myhub.shortname);
+        myhub.send_bulb_settings(num, cmd);
     }
 
     void set_color(Color color)   {
@@ -382,7 +303,7 @@ class PhueSystem  {
         // Can't handle different hubs with bulbs of same bulb number.
         bulbindex i = 0;
         while (i < bulbs.length) {
-            if (bulbs[i].bulbnum==bulbnum) {
+            if (bulbs[i].num==bulbnum) {
                 return bulbs[i];
             }
         }
@@ -419,7 +340,7 @@ class PhueSystem  {
         writefln("COLORIZE digit %d, bulbs.len=%d", idigit, bulbs.length);
         dim_all_bulbs();
         for (bulbindex ib=0; ib<bulbs.length; ib++)  {
-            ushort n = to!ushort( (want_bulbnum)? bulbs[ib].bulbnum : bulbs[ib].myindex );
+            ushort n = to!ushort( (want_bulbnum)? bulbs[ib].num : bulbs[ib].myindex );
             ushort[3] digit;
             digit[2]=n/100;
             ushort r = to!ushort( n-100*digit[2] );
@@ -444,7 +365,7 @@ class PhueSystem  {
         bulbs.length=0;
         foreach (hub; hubs)  {
             writefln("Asking hub %s for its bulbs, before len=%d", hub.shortname, bulbs.length);
-            auto bb =hub.all_my_bulbs(); 
+            auto bb =all_bulbs_of_hub(hub); 
             bulbs ~= bb;
             writefln("bulbs.len=%d  given %s", bulbs.length, bb );
         }
@@ -535,6 +456,8 @@ class Commander {
         auto tokens = cmdline.split!isWhite;
         if (tokens.length==0)  return false;
         string cmd = toLower(tokens[0]);
+        
+        // First, check for fixed canned commands
         switch (cmd) {
             case ".":  
                     currentbulb=null;
@@ -548,20 +471,16 @@ class Commander {
                     return true;
                     
             case "all":
-                    writefln(" -- ALL -- ");
-                    if (tokens.length==1) {
-                        currentbulb = null;   // indicates next on/off/color is for all bulbs
-                    } else {
-                        switch (tokens[1])  {
-                            case "on": 
-                                    system.turn_all_bulbs(BulbState.ON); 
-                                    break;
-                            case "off": 
-                                    system.turn_all_bulbs(BulbState.OFF); 
-                                    break;
-                            default:
-                                    return false;
-                        }
+                    switch (tokens[1])  {
+                        case "on": 
+                                system.turn_all_bulbs(BulbState.ON); 
+                                break;
+                        case "off": 
+                                system.turn_all_bulbs(BulbState.OFF); 
+                                break;
+                        default:
+                                //allifier(tokens[1..$]) // loop over bulbs, execute(B#~[1..]) 
+                                return false;
                     }
                     return true;
                     
@@ -589,7 +508,7 @@ class Commander {
                               cmd, 
                               currentbulb.myindex, i, 
                               currentbulb.shortname,
-                              currentbulb.bulbnum, currentbulb.myhub.shortname,
+                              currentbulb.num, currentbulb.myhub.shortname,
                               tokens[1..$]);
                 }else{
                     writefln("No bulb of that number");
@@ -611,7 +530,6 @@ class Commander {
             }
         }
         
-        
         return false;
     }
 }
@@ -623,6 +541,7 @@ int main(string[] args)  {
     
     // Hardcoded for my actual hardware at this time
     /*TODO*/  // read from config file, or call find_hubs() scanning network
+    
     Hub hub1 = new Hub("00:17:88:21:8A:2E",
              "192.168.11.41",
              "78g2lrMNHZHZFozjDJ7z7lneQhl8guZpzssU0HIr",
