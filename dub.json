@@ -1,0 +1,12 @@
+{
+	"authors": [
+		"darenw"
+	],
+	"copyright": "Copyright © 2022, darenw",
+	"dependencies": {
+		"dlangui": "~>0.10.2"
+	},
+	"description": "Philips Hue bulb controller for faking sunrise",
+	"license": "MIT",
+	"name": "phuecmd"
+}
