@@ -26,16 +26,16 @@ void run_wakeup(PhueSystem system,  string alarm_start_time) {
     Duration oneminute = dur!("minutes")(1);
     Duration tensec = dur!("seconds")(10);
     
-//    auto wakeup_time1 =   SysTime.fromSimpleString( "2023-Jan-07 08:35:28" );
- //   auto wakeup_time2 =  SysTime.fromSimpleString( "2023-Jan-07 08:43:28" );
-    auto wakeup_time1 =   SysTime.fromSimpleString( "2023-Jan-07 08:25:08" );
-    auto wakeup_time2 =  SysTime.fromSimpleString( "2023-Jan-07 08:40:48" );
+    auto wakeup_time1 =   SysTime.fromSimpleString( "2023-Jan-07 08:35:28" );
+    auto wakeup_time2 =  SysTime.fromSimpleString( "2023-Jan-07 08:43:28" );
+//    auto wakeup_time1 =   SysTime.fromSimpleString( "2023-Jan-07 08:25:08" );
+//    auto wakeup_time2 =  SysTime.fromSimpleString( "2023-Jan-07 08:40:48" );
     writeln(Clock.currTime(), "  T1=", wakeup_time1, "  T2=", wakeup_time2);
     
     bool running = true;
     while (running)  {
-        //Thread.sleep(oneminute);
-        Thread.sleep(tensec);
+        Thread.sleep(oneminute);
+        //Thread.sleep(tensec);
         
         SysTime now = Clock.currTime();
         writeln(now, "  ", wakeup_time1, "  ", now > wakeup_time1  );
