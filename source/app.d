@@ -37,7 +37,7 @@ void RunGui(PhueSystem system,  string[] args) {
 }
 
 
-void SelectSimpleCommand(PhueSystem system, string cmd) {
+void SimpleCommand(PhueSystem system, string cmd)  {
     switch (cmd)   {
         case "check":
             system.testflash();
@@ -56,10 +56,12 @@ void SelectSimpleCommand(PhueSystem system, string cmd) {
             break;
         
         case "dimblue":
+            system.set_all_bulbs(true);
             system.set_all_bulbs(PhueColor(0.06, 0.17, 0.13));
             break;
 
         case "bright":
+            system.set_all_bulbs(true);
             system.set_all_bulbs(PhueColor(1.0, 0.33, 0.33));
             break;
         
@@ -90,7 +92,7 @@ void main(string[] args)
                 break;
                 
         case 2: 
-                SelectSimpleCommand(system, args[1]);
+                SimpleCommand(system, args[1]);
                 break;
                 
         case 3: 
