@@ -47,6 +47,12 @@ void SimpleCommand(PhueSystem system, string cmd)  {
             run_random_show(system);
             break;
             
+        case "random1":
+            foreach (b; system.bulbs)   {
+                b.set( random_color() );
+            }
+            break;
+
         case "on":
             system.set_all_bulbs(true);
             break;
