@@ -26,6 +26,16 @@ class PhueSystem
         bulbs ~= new Bulb(hub2, 36, "Lamp3");
     }
     
+    void set_all_bulbs(bool on)  {
+        foreach (b; bulbs) 
+            b.turn(on);
+    }
+
+    void set_all_bulbs(PhueColor color)  {
+        foreach (b; bulbs) 
+            b.set(color);
+    }
+    
     
     void testflash()  {
         Duration onesec = dur!("seconds")(1);
