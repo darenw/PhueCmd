@@ -11,13 +11,14 @@
 import std.stdio;
 import std.format;
 import std.string;
-import dlangui;
+import std.datetime;
 import core.thread;
 import phuecolor;
 import bulb;
 import phuesystem;
 import randomshow;
 import wakeup;
+import dlangui;
 
 
 immutable string helptext = q"ZZZ
@@ -54,6 +55,11 @@ void SimpleCommand(PhueSystem system, string cmd)  {
             }
             break;
 
+        case "now":
+            auto now = Clock.currTime().toString();
+            writeln(now[0 .. 20]);
+            break;
+            
         case "on":
             system.set_all_bulbs(BulbState.on);
             break;
