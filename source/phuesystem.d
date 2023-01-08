@@ -7,6 +7,10 @@ import phuecolor;
 import hub;
 import bulb;
 
+ushort bulbindex;  // uniquely identifies bulbs in System
+ushort hubindex;   // uniquely identifies hubs
+
+
 class PhueSystem 
 {
     Hub[] hubs;
@@ -26,9 +30,9 @@ class PhueSystem
         bulbs ~= new Bulb(hub2, 36, "Lamp3");
     }
     
-    void set_all_bulbs(bool on)  {
+    void set_all_bulbs(BulbState state)  {
         foreach (b; bulbs) 
-            b.turn(on);
+            b.turn(state);
     }
 
     void set_all_bulbs(PhueColor color)  {
@@ -41,18 +45,18 @@ class PhueSystem
         Duration onesec = dur!("seconds")(1);
         
         foreach (b; bulbs)  {
-            b.turn(true);
+            b.turn(BulbState.on);
             b.set( WHITED50 );
         }
         Thread.sleep(onesec);
         
         foreach (b; bulbs)  {
-            b.turn(false);
+            b.turn(BulbState.off);
         }
         Thread.sleep(onesec);
         
         foreach (b; bulbs)  {
-            b.turn(true);
+            b.turn(BulbState.on);
         }
         Thread.sleep(onesec);
 

@@ -14,6 +14,7 @@ import std.string;
 import dlangui;
 import core.thread;
 import phuecolor;
+import bulb;
 import phuesystem;
 import randomshow;
 import wakeup;
@@ -54,23 +55,27 @@ void SimpleCommand(PhueSystem system, string cmd)  {
             break;
 
         case "on":
-            system.set_all_bulbs(true);
+            system.set_all_bulbs(BulbState.on);
             break;
         
         case "off":
-            system.set_all_bulbs(false);
+            system.set_all_bulbs(BulbState.off);
             break;
         
         case "dimblue":
-            system.set_all_bulbs(true);
+            system.set_all_bulbs(BulbState.on);
             system.set_all_bulbs(PhueColor(0.06, 0.17, 0.13));
             break;
 
         case "bright":
-            system.set_all_bulbs(true);
+            system.set_all_bulbs(BulbState.on);
             system.set_all_bulbs(PhueColor(1.0, 0.33, 0.33));
             break;
         
+        case "dimred":
+            system.set_all_bulbs(BulbState.on);
+            system.set_all_bulbs(PhueColor(0.013, 0.6, 0.35));
+            break;
 
         case "help":
             writeln(helptext);

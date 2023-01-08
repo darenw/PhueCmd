@@ -8,17 +8,17 @@ import std.datetime;
 import core.thread;
 import core.time;
 import dlangui;
+import bulb;
 import phuecolor;
 import phuesystem;
 
 
 
+void run_wakeup(PhueSystem system,  string alarm_start_time, bool keep_init_state=false) {
 
-void run_wakeup(PhueSystem system,  string alarm_start_time) {
-
-
-    system.set_all_bulbs(PhueColor(0.1, 0.2, 0.2));
-    system.set_all_bulbs(false);
+    if (!keep_init_state) {
+        system.set_all_bulbs(BulbState.off);
+    }
 
     // Just a crude sanity check: prove we're here by making dim red
     system.bulbs[0].set( PhueColor(0.2, 0.55, 0.2) );
@@ -26,9 +26,11 @@ void run_wakeup(PhueSystem system,  string alarm_start_time) {
     Duration oneminute = dur!("minutes")(1);
     Duration tensec = dur!("seconds")(10);
     
-    auto wakeup_time1 =   SysTime.fromSimpleString( "2023-Jan-07 08:35:28" );
-    auto wakeup_time2 =  SysTime.fromSimpleString( "2023-Jan-07 08:43:28" );
-    writeln(Clock.currTime(), "  T1=", wakeup_time1, "  T2=", wakeup_time2);
+    auto wakeup_time1 =  SysTime.fromSimpleString( "2023-Jan-08 06:53:28" );
+    auto wakeup_time2  =  SysTime.fromSimpleString( "2023-Jan-08 07:02:28" );
+    writeln("Time now:  ",  Clock.currTime());
+    writeln("  wakeup:  ",  wakeup_time1);
+    writeln("    peak:  ",  wakeup_time2);
     
     bool running = true;
     while (running)  {
@@ -39,7 +41,7 @@ void run_wakeup(PhueSystem system,  string alarm_start_time) {
         writeln(now, "  ", wakeup_time1, "  ", now > wakeup_time1  );
         if (now > wakeup_time1) {
             running=false;
-            system.set_all_bulbs(true);
+            system.set_all_bulbs(BulbState.on);
             system.set_all_bulbs( PhueColor( 0.2, 0.2, 0.3) );
         }
     }

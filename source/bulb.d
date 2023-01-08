@@ -7,6 +7,9 @@ import phuecolor;
 import hub;
 
 
+enum BulbState { off, on };
+
+
 class Bulb 
 {
     bulbnumber bnum;   // id number known to Hub
@@ -22,8 +25,8 @@ class Bulb
         
     }
     
-    void turn(bool on)  {
-        hub.setbulbstate(bnum, format(`{"on":%s}`,  on? "true" : "false"));
+    void turn(BulbState state)  {
+        hub.setbulbstate(bnum, format(`{"on":%s}`,  state==BulbState.on?  "true" : "false"));
     }
     
     void set(PhueColor color)  {
