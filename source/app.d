@@ -132,7 +132,7 @@ void FancierCommand(PhueSystem system, string[] args)  {
                 writeln("Muddled alarm start time: ", args[2], " - ignoring");
                 return;
             }
-            run_wakeup(system, tawake);
+            run_wakeup(system, tawake, true);
             break;
         
         case "set": 
