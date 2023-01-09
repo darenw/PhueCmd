@@ -11,6 +11,8 @@
 import std.stdio;
 import std.format;
 import std.string;
+import std.ascii;
+import std.algorithm;
 import std.datetime;
 import core.thread;
 import phuecolor;
@@ -93,10 +95,69 @@ void SimpleCommand(PhueSystem system, string cmd)  {
 }
 
 
+TimeOfDay tod(string arg)   {
+    auto parts = arg.findSplit(":");
+    writeln("parts ", parts);
+    if (parts[1].length==0) {
+        throw new DateTimeException("no : in time of day");
+    }
+    int h = to!int(parts[0]);
+    int m, s;
+    auto x = parts[2].findSplit(":");
+    writeln("x ", x);
+    try {
+        if (x[2].length>0)  {
+            writeln("hav mm:ss. will m=, s- ", x[0], x[2]); 
+            m = to!int(x[0]);
+            s = to!int(x[2]);
+        } else {
+            writeln("no sec. will m=() ", x[0]);
+            m = to!int(x[0]);
+            s = 0;
+        }
+    } catch (Exception) {
+        throw new DateTimeException("Can't parse mm:ss");
+    }
+    writeln("hh mm ss = ", h, " ", m, " " , s);
+    return TimeOfDay(h, m, s);
+}
+
+
+
+void FancierCommand(PhueSystem system, string[] args)  {
+                
+    switch (args[1])  {
+
+        case "wakeup": 
+            TimeOfDay tawake;
+            try {
+                tawake = tod(args[2]);
+                writeln("wakeup set for ", tawake);
+            } catch (DateTimeException) {
+                writeln("Muddled alarm start time: ", args[2], " - ignoring");
+                return;
+            }
+            run_wakeup(system, tawake);
+            break;
+        
+        case "set": 
+            bulbindex ibulb = to!ushort(args[2]);
+            PhueColor color = PhueColor( 
+                                to!float(args[3]),
+                                to!float(args[4]),
+                                to!float(args[5]));
+            system.bulbs[ibulb].set( color );
+            break;
+        
+        default:
+            RunGui(system, args);
+    }
+}
+
+
 
 void main(string[] args)
 {
-    //
     // Should create system from config file, network search, or other means
     // but for now, all I have is hardcoded info
     PhueSystem system = new PhueSystem();
@@ -111,15 +172,8 @@ void main(string[] args)
         case 2: 
                 SimpleCommand(system, args[1]);
                 break;
-                
-        case 3: 
-                if (args[1]=="wakeup")
-                    run_wakeup(system, args[2]);
-                else
-                    RunGui(system,args);
-                break;
-                
+        
         default:
-                RunGui(system, args);
+                FancierCommand(system, args);
     }
 }

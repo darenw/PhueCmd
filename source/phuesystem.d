@@ -7,8 +7,8 @@ import phuecolor;
 import hub;
 import bulb;
 
-ushort bulbindex;  // uniquely identifies bulbs in System
-ushort hubindex;   // uniquely identifies hubs
+alias bulbindex = ushort;  // uniquely identifies bulbs in System
+alias hubindex = ushort;   // uniquely identifies hubs
 
 
 class PhueSystem 
