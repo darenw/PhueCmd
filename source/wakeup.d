@@ -4,7 +4,6 @@
 import std.stdio;
 import std.format;
 import std.string;
-import std.ascii;
 import std.datetime;
 import core.thread;
 import core.time;
@@ -15,86 +14,67 @@ import phuesystem;
 
 
 
-void run_wakeup(PhueSystem system,  string alarm_start_time, bool keep_init_state=false) {
+TimeOfDay todnow()  {
+    SysTime stnow = Clock.currTime();
+    TimeOfDay tnow = cast(TimeOfDay)stnow;
+    return tnow;
+}
+
+
+
+void run_wakeup(PhueSystem system,  TimeOfDay t_awaken,  bool keep_init_state=false) {
 
     if (!keep_init_state) {
         system.set_all_bulbs(BulbState.off);
     }
 
-    // Just a crude sanity check: prove we're here by making dim red
-    system.bulbs[0].set( PhueColor(0.2, 0.55, 0.2) );
-
-    Duration oneminute = dur!("minutes")(1);
-    Duration tensec = dur!("seconds")(10);
+    Duration one_minute = dur!("minutes")(1);  // normal
+    Duration ten_sec = dur!("seconds")(7);    // fast-paced for testing
+    Duration fast = dur!("seconds")(4);
+    auto time_check_period = one_minute;
     
-    auto tnow = Clock.currTime();
-    string nowstr = tnow.toString();
+    TimeOfDay t_now = todnow();
+    writeln("Starting wakeup clockwatching at ", t_now);
 
-    // Yeah, this is bad messy logic, works for happy cases and catches only a few bad cases.
-    bool good = false;
-    if (alarm_start_time.length==3)  {
-        good =  isDigit( alarm_start_time[0] ) &&
-                alarm_start_time[1]==':'       &&
-                isDigit( alarm_start_time[2] ) &&
-                isDigit( alarm_start_time[3] );
-        if (good)
-            alarm_start_time = "0" ~ alarm_start_time;
-    } 
-    else if (alarm_start_time.length==4)  {
-        good =  isDigit( alarm_start_time[0] ) &&
-                isDigit( alarm_start_time[1] ) &&
-                alarm_start_time[2]==':'       &&
-                isDigit( alarm_start_time[3] ) &&
-                isDigit( alarm_start_time[4] );    
+
+    // We are usually setting alarm in late morning, afternoon, evening of
+    // prev day.  Wait for EOD before doing anything else.
+    // If setting alarm at 2AM, this step is quick, does nothing.
+    bool done = false;
+    while (!done)   {
+        Thread.sleep(time_check_period);
+        t_now = todnow();
+        done = (t_now < t_awaken);
+    }
+    writeln("EOD watch is done.");
+    
+    
+    // Now we're in the wee early hours of the day during with to awaken
+    // Just watch for t_awake, then being the light sequencing process
+    done = false;
+    while (!done)   {
+        Thread.sleep(time_check_period);
+        t_now = todnow();
+        done = (t_now > t_awaken);
     }
     
-    if (false &&  !good)   {
-        writeln("Muddled alarm start time: ", alarm_start_time, " - ignoring");
-        system.set_all_bulbs(BulbState.on);
-        return;
+
+    // Whoo-hoo! Start the light sequence!
+    PhueColor twilight       = PhueColor( 0.10, 0.23, 0.21);
+    PhueColor sunrise_orange = PhueColor(0.2, 0.57, 0.37);
+    PhueColor daylight       =  blackbody(5600);
+    
+    system.set_all_bulbs(BulbState.on);
+    foreach (j; 0 .. 6)   {
+      system.set_all_bulbs( mix(twilight, (j/5.0)*(j/5.0), sunrise_orange) );
+      Thread.sleep(one_minute);
+      //Thread.sleep(fast);
     }
     
-    string startstr = nowstr[0 .. 12] ~ alarm_start_time ~ ":00";    
-    auto t_alarm_start = SysTime.fromSimpleString(startstr);
-    auto t_alarm_peak =  t_alarm_start; // PLUS TEN MINUTES  how to do???
-    
-    // Alternative: hardcoded to use during dev, in case above manipulations don't work
-   //   t_alarm_start =  SysTime.fromSimpleString( "2023-Jan-08 06:53:28" );
-   //   t_alarm_peak  =  SysTime.fromSimpleString( "2023-Jan-08 07:02:28" );
-    t_alarm_start =  SysTime.fromSimpleString( "2023-Jan-08 07:53:18" );
-    t_alarm_peak  =  SysTime.fromSimpleString( "2023-Jan-08 07:59:48" );
-    
-    
-    writeln("Time now:  ",  Clock.currTime());
-    writeln("  wakeup:  ",  t_alarm_start);
-    writeln("    peak:  ",  t_alarm_peak);
-    
-    bool running = true;
-    while (running)  {
-        //Thread.sleep(oneminute);
-        Thread.sleep(tensec);
-        
-        SysTime now = Clock.currTime();
-        writeln(now, "  ", t_alarm_start, "  ", now > t_alarm_start  );
-        if (now > t_alarm_start) {
-            running=false;
-            system.set_all_bulbs(BulbState.on);
-            system.set_all_bulbs( PhueColor( 0.2, 0.2, 0.3) );
-        }
+    foreach (j; 0 .. 6)   {
+      system.set_all_bulbs( mix(sunrise_orange, j/5.0, daylight) );
+      Thread.sleep(one_minute);
+      //Thread.sleep(fast);
     }
-
-
-    running = true;
-    while (running)  {
-        Thread.sleep(oneminute);
-        //Thread.sleep(tensec);
-        
-        SysTime now = Clock.currTime();
-        writeln(now, "  ", t_alarm_peak, "  ", now > t_alarm_peak  );
-        if ( now > t_alarm_peak ) {
-            running=false;
-            system.set_all_bulbs( PhueColor( 1.0, 0.3, 0.3) );
-        }
-    }
-
+    
 }

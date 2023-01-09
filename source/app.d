@@ -97,28 +97,23 @@ void SimpleCommand(PhueSystem system, string cmd)  {
 
 TimeOfDay tod(string arg)   {
     auto parts = arg.findSplit(":");
-    writeln("parts ", parts);
     if (parts[1].length==0) {
         throw new DateTimeException("no : in time of day");
     }
     int h = to!int(parts[0]);
     int m, s;
     auto x = parts[2].findSplit(":");
-    writeln("x ", x);
     try {
         if (x[2].length>0)  {
-            writeln("hav mm:ss. will m=, s- ", x[0], x[2]); 
             m = to!int(x[0]);
             s = to!int(x[2]);
         } else {
-            writeln("no sec. will m=() ", x[0]);
             m = to!int(x[0]);
             s = 0;
         }
     } catch (Exception) {
         throw new DateTimeException("Can't parse mm:ss");
     }
-    writeln("hh mm ss = ", h, " ", m, " " , s);
     return TimeOfDay(h, m, s);
 }
 
