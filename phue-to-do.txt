@@ -1,0 +1,5 @@
+[ ] config file for hub key,  wakeup seq, etc
+[ ] main() to dlangui's Main
+[ ] Sequence   .play()  Use in wakeup.
+[ ] random  gui w CIE 
+[ ] command mode - same as cmd line but w prompt loop
