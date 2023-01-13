@@ -43,10 +43,10 @@ void RunGui(PhueSystem system,  string[] args) {
 
 void SimpleCommand(PhueSystem system, string cmd)  {
     switch (cmd)   {
-        case "check":
-            system.testflash();
+        case "list":
+            system.listAll();
             break;
-        
+                
         case "random":
             run_random_show(system);
             break;
@@ -90,7 +90,14 @@ void SimpleCommand(PhueSystem system, string cmd)  {
             break;
             
         default:
-            writefln("Unknown command %s", cmd);
+            char last = cmd[$-1];
+            if (isDigit(cmd[0]) && (last=='K' || last=='k')) {
+                float T = to!float(cmd[0 .. $-1]);
+                writeln(" /", last, "/   T=", T, "   allbutlast ", cmd[$-1] );
+                system.set_all_bulbs( blackbody(T) );
+            } else {
+                writefln("Unknown command %s", cmd);
+            }
     }
 }
 
@@ -120,8 +127,10 @@ TimeOfDay tod(string arg)   {
 
 
 void FancierCommand(PhueSystem system, string[] args)  {
-                
-    switch (args[1])  {
+    
+    string cmd = args[1];
+    
+    switch (cmd)  {
 
         case "wakeup": 
             TimeOfDay tawake;
@@ -144,8 +153,9 @@ void FancierCommand(PhueSystem system, string[] args)  {
             system.bulbs[ibulb].set( color );
             break;
         
+        
         default:
-            RunGui(system, args);
+                RunGui(system, args);
     }
 }
 

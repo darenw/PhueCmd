@@ -15,6 +15,7 @@ alias bulbnumber = uint;
 
 class Hub  
 {
+    int index;
     string key;
     string ipaddr;
     string macaddr;
@@ -25,6 +26,7 @@ class Hub
         key = _key;
         ipaddr = _ipaddr;
         name = _name;
+        index = -1; // undefined for now
         myurl = format("http://%s/api/%s/", ipaddr, key);
     }
     

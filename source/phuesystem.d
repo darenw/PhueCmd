@@ -19,16 +19,28 @@ class PhueSystem
     this()  {
     }
     
+    
     void loadCannedSystemDSW()  {
         Hub hub1 =  new Hub("H1",  "192.168.11.17",  "VHQitrMnCUvVb4YLmuTmYQvO54ZjUgihgSJGKTFy");
         Hub hub2 =  new Hub("H2",  "192.168.11.50",  "78g2lrMNHZHZFozjDJ7z7lneQhl8guZpzssU0HIr");
-        hubs ~= hub1;
-        hubs ~= hub2;
+        hubs ~= hub1;   hub1.index=0;
+        hubs ~= hub2;   hub2.index=1;
         
         bulbs ~= new Bulb(hub1, 29, "Lamp1");
         bulbs ~= new Bulb(hub2, 35, "Lamp2");
         bulbs ~= new Bulb(hub2, 36, "Lamp3");
     }
+    
+    
+    void listAll()   {
+        foreach (hi,hub; hubs) {
+            writefln("hub%d %s %s  %s", hi, hub.name, hub.ipaddr, hub.key);
+        }
+        foreach (bi, bulb; bulbs)  {
+            writefln("B%02d  %s H%dB%d",  bi, bulb.name, bulb.hub.index, bulb.bnum);
+        }
+    }
+    
     
     void set_all_bulbs(BulbState state)  {
         foreach (b; bulbs) 
@@ -40,28 +52,4 @@ class PhueSystem
             b.set(color);
     }
     
-    
-    void testflash()  {
-        Duration onesec = dur!("seconds")(1);
-        
-        foreach (b; bulbs)  {
-            b.turn(BulbState.on);
-            b.set( WHITED50 );
-        }
-        Thread.sleep(onesec);
-        
-        foreach (b; bulbs)  {
-            b.turn(BulbState.off);
-        }
-        Thread.sleep(onesec);
-        
-        foreach (b; bulbs)  {
-            b.turn(BulbState.on);
-        }
-        Thread.sleep(onesec);
-
-        foreach (i, b; bulbs)  {
-            b.set( random_color(0.05, 0.7) );
-        }
-    }
 }
