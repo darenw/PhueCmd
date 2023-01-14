@@ -22,6 +22,7 @@ Usage
 
 
 commands:
+
     phuecmd list        prints list of hubs, bulbs, other info
     phuecmd on          turns on all bulbs, whatever colors they're set to
     phuecmd off         turns them all off
