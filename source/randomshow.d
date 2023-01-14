@@ -16,8 +16,8 @@ import phuesystem;
 // Settings - hardcoded for now. In future, will be GUI sliders, checkboxes etc
 
 float max_brightness = 0.5f;
-Duration pause = dur!("seconds")(2);    // fast-paced for testing
-int nsteps = 5; //11;
+Duration pause = dur!("seconds")(15);    // fast-paced for testing
+int nsteps = 11;
 
 
 void run_random_show(PhueSystem system)  {
@@ -28,7 +28,7 @@ void run_random_show(PhueSystem system)  {
     PhueColor[] color1;   color1.length = nbulbs; 
     PhueColor[] color2;   color2.length = nbulbs;
 
-    foreach (i, b; system.bulbs)  {
+    foreach (i, ref b; system.bulbs)  {
         b.set( ZERO_COLOR );
         color1[i] = ZERO_COLOR;
         color2[i] = random_color(0.5*max_brightness, max_brightness);
@@ -38,7 +38,7 @@ void run_random_show(PhueSystem system)  {
     bool running = true;
     while (running) {
         for (float f = 0.0f;  f < 1.001f; f += 1.0f/nsteps)  {
-            foreach (i, b; system.bulbs)  {
+            foreach (i, ref b; system.bulbs)  {
                 b.set( sine_mix(color1[i], f, color2[i]) );
             }
             Thread.sleep(pause);

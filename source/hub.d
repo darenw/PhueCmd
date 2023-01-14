@@ -36,7 +36,10 @@ class Hub
         put(myurl ~ api, json);
     }
     
-    
+    JSONValue getbulbstate(bulbnumber bulbnum)  {
+        auto reply = get(myurl ~ format("lights/%d", bulbnum));
+        return parseJSON(reply);
+    }  
 }
 
 

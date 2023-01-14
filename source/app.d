@@ -41,7 +41,7 @@ void RunGui(PhueSystem system,  string[] args) {
 }
 
 
-void SimpleCommand(PhueSystem system, string cmd)  {
+void SimpleCommand(ref PhueSystem system, string cmd)  {
     switch (cmd)   {
         case "list":
             system.listAll();
@@ -52,7 +52,7 @@ void SimpleCommand(PhueSystem system, string cmd)  {
             break;
             
         case "random1":
-            foreach (b; system.bulbs)   {
+            foreach (ref b; system.bulbs)   {
                 b.set( random_color() );
             }
             break;
@@ -83,6 +83,13 @@ void SimpleCommand(PhueSystem system, string cmd)  {
         case "dimred":
             system.set_all_bulbs(BulbState.on);
             system.set_all_bulbs(PhueColor(0.013, 0.6, 0.35));
+            break;
+        
+        case "half":
+            foreach (ref b; system.bulbs)  {
+                auto c = b.current_color;
+                b.set( PhueColor( c.bri/2, c.x, c.y ) );
+            }
             break;
 
         case "help":

@@ -6,6 +6,7 @@ import core.thread;
 import phuecolor;
 import hub;
 import bulb;
+import std.json;
 
 alias bulbindex = ushort;  // uniquely identifies bulbs in System
 alias hubindex = ushort;   // uniquely identifies hubs
@@ -29,26 +30,47 @@ class PhueSystem
         bulbs ~= new Bulb(hub1, 29, "Lamp1");
         bulbs ~= new Bulb(hub2, 35, "Lamp2");
         bulbs ~= new Bulb(hub2, 36, "Lamp3");
+
+        update_bulbs_from_reality();
     }
     
+    
+    void update_bulbs_from_reality()   {
+        foreach (ref b; bulbs)   {
+                JSONValue json = b.hub.getbulbstate(b.bnum);
+                JSONValue state = json["state"];
+                auto bri = state["bri"].integer/255.0f;
+                auto x =  state["xy"][0].floating;
+                auto y =  state["xy"][1].floating;
+                b.current_color = PhueColor(bri, x, y);
+                b.gamut = json["capabilities"]["control"]["colorgamuttype"].str;
+                b.model = json["modelid"].str;
+        }
+    }
+
     
     void listAll()   {
-        foreach (hi,hub; hubs) {
+        foreach (hi, ref hub; hubs) {
             writefln("hub%d %s %s  %s", hi, hub.name, hub.ipaddr, hub.key);
         }
-        foreach (bi, bulb; bulbs)  {
-            writefln("B%02d  %s H%dB%d",  bi, bulb.name, bulb.hub.index, bulb.bnum);
+        foreach (bi, ref bulb; bulbs)  {
+            writefln("B%02d  %s H%dB%d %s %s (gamut %s)",  bi, bulb.name, bulb.hub.index, 
+                bulb.bnum, 
+                bulb.current_color,
+                bulb.model,
+                bulb.gamut);
         }
     }
     
-    
+
     void set_all_bulbs(BulbState state)  {
-        foreach (b; bulbs) 
+        foreach (ref b; bulbs) 
             b.turn(state);
     }
 
+
     void set_all_bulbs(PhueColor color)  {
-        foreach (b; bulbs) 
+        foreach (ref b; bulbs) 
             b.set(color);
     }
     
