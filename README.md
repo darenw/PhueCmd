@@ -27,6 +27,7 @@ commands:
     phuecmd off         turns them all off
     phuecmd bright      sets all bulbs to maximum white. (Turns on any that are off)
     phuecmd dimblue     sets all bulbs to dim blue color (similar commands may exist)
+    phuecmd half        sets all bulbs to half as bright, same color
     phuecmd 5000K       blackbody at 5000K.  Can do 2000K to 10000K.
     phuecmd random      run continuously varying random colors. Has GUI.
     phuecmd random1     just once right now, set random colors.

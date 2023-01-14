@@ -6,12 +6,13 @@ PhueCmd - work to do
 [ ] cmd line options:  --config file, --use-canned, --other options...  
 [ ] random color gen: white avoidance, correlated color sets
 [ ] curved transit path between keys in randomshow
-[ ] Sequence,   .play()  Use in wakeup, arb programmed lights
+[ ] Sequence, tracks not bulbs,  .play()  Use in wakeup, arb programmed lights
+[ ] Assignment to assign bulbs to a track
+[ ] Bulb groups. Have phuecmd 4000k apply only to one group, or all but one
 [ ] main() to dlangui's Main
-[ ] random  gui w CIE 
+[ ] GUI for randomshow, trails on CIE map
 [ ] GUI for wakeup
 [ ] or one massive gui for all functions?
-
 [ ] command mode - same as cmd line but w prompt loop, staying within PhueCmd
 
 
