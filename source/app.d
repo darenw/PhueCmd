@@ -5,6 +5,9 @@
  * 
  * For now, Linux only.
  * 
+ * How to build:
+ *    bash>  dub build
+ * 
  */
 
 
@@ -28,11 +31,20 @@ PhueCmd: operate your Philips Hue bulbs in fun and useful ways.
 (Work in progress, may be buggy, don't use for life-critical applications, etc.)
 
 Usage:
-     bash> phuecmd help          -- prints this help
-     bash> phuecmd check         -- sets all bulbs white, off, white, random
+     bash> phuecmd help          -- prints what you are reading now
+     bash> phuecmd list          -- prints out all hubs and bulbs known atm
      bash> phuecmd random        -- infinite loop running bulbs with random colors
+     bash> phuecmd random1       -- Just once right now, set bulbs to random colors
      bash> phuecmd wakeup 7:40   -- all off, then slow brighten stating at 7:40
-     bash> phuecmd  ...          -- other usages TBD 
+     bash> phuecmd now           -- prints date, time right now
+     bash> phuecmd on            -- turn on all bulbs. Colors same as before.
+     bash> phuecmd off           -- turn off all bulbs.
+     bash> phuecmd set n bri x y  -- set brightness, color of one bulb. Bri=0.0 to 1.0
+     bash> phuecmd bright         -- set all bulbs to brightest white (
+     bash> phuecmd dimblue        -- set all bulbs to dim blue-violet
+     bash> phuecmd half           -- make all bulbs half as bright 
+     bash> phuecmd 
+     bash> phuecmd 
 ZZZ";
 
 
@@ -93,6 +105,7 @@ void SimpleCommand(ref PhueSystem system, string cmd)  {
             break;
 
         case "help":
+        case "--help":
             writeln(helptext);
             break;
             
