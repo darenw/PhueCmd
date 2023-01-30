@@ -5,6 +5,8 @@ import std.format;
 import std.math;
 import phuecolor;
 import hub;
+import std.json;
+
 
 
 enum BulbState { off, on };
@@ -12,13 +14,19 @@ enum BulbState { off, on };
 
 class Bulb 
 {
-    bulbnumber bnum;   // id number known to Hub
-    Hub hub;           // the Hub that knows about this Bulb
-    PhueColor current_color;
-    string gamut;
-    string model;
     string name;       // name for humans to use
+    Hub hub;           // the Hub that knows about this Bulb
+    bulbnumber bnum;   // id number known to Hub
+    string model;
+    string gamut;
+    float  maxlumens;
 
+    // Our idea of bulb's current physical state, on/off, color...
+    BulbState state;
+    PhueColor current_color;
+    float  hue, sat;
+    float colortemp;
+    
     
     this(ref Hub _hub,  bulbnumber _bnum, string _name) {
         bnum = _bnum;
@@ -30,12 +38,40 @@ class Bulb
         hub.setbulbstate(bnum, format(`{"on":%s}`,  state==BulbState.on?  "true" : "false"));
     }
     
+    
     void set(PhueColor color)  {
         current_color = color;
-        int b  = cast(int)floor(color.bri*255);
-        string json = format(`{"bri":%d,"xy":[%.3f,%.3f]}`, b, color.x, color.y);
+        int bri  = cast(int)floor(color.bri*255);
+        string json = format(`{"bri":%d,"xy":[%.3f,%.3f]}`, bri, color.x, color.y);
         hub.setbulbstate(bnum, json);
     }
     
     
+    
+    void read_bulb_characteristics()  {
+        JSONValue json = hub.get_bulb_json_info(bnum);
+        gamut = json["capabilities"]["control"]["colorgamuttype"].str;
+        model = json["modelid"].str;
+    }
+    
+    
+    void update_bulb_state_from_reality()   {
+        JSONValue json = hub.get_bulb_json_info(bnum);
+        JSONValue state = json["state"];
+        state = (state["on"].boolean)? BulbState.on : BulbState.off;
+        auto bri = state["bri"].integer/255.0f;
+        auto x =  state["xy"][0].floating;
+        auto y =  state["xy"][1].floating;
+        current_color = PhueColor(bri, x, y);
+
+    }
+    
+    
+    void write_config(ref File config)   {
+        config.writefln("[bulbs.%s]", name);
+        config.writefln("name=\"%s\"", name);
+        config.writefln("model=\"%s\"", model);
+        config.writefln("hubname=\"%s\"",  hub.name);
+        config.writefln("idh=%d", bnum);
+    }
 }

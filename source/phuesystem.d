@@ -2,11 +2,14 @@
 
 import std.stdio;
 import std.format;
+import std.file : read;
 import core.thread;
 import phuecolor;
 import hub;
 import bulb;
 import std.json;
+import toml;
+
 
 alias bulbindex = ushort;  // uniquely identifies bulbs in System
 alias hubindex = ushort;   // uniquely identifies hubs
@@ -21,9 +24,79 @@ class PhueSystem
     }
     
     
+    /**
+     * remove all Hubs, Bulbs.
+     * Probably better to just create a new PhueSystem, but forget() is handy 
+     * for certain tests.
+     */
+    void forget_all()   {
+        bulbs.length = 0;
+        hubs.length = 0;
+    }
+    
+    
+    void loadSystemConfig(string filepath)  {
+        auto sysconfig = parseTOML( cast(string)read(filepath) );
+        writeln(sysconfig);
+    }
+    
+    
+    
+    
+    void saveSystemConfig(string filepath)   {
+        
+        try {
+            auto config = File(filepath, "w");
+            config.writefln("[hubs]");
+            foreach (i,h; hubs)   {
+                config.writefln("H%d=\"%s\"", i, h.name);
+            }
+            config.writeln("");
+            foreach (h; hubs)   {
+                h.write_config(config);
+                config.writeln("");
+            }
+            config.writeln("");
+            
+            config.writeln("[bulbs]");
+            foreach (i, b; bulbs)  {
+                config.writefln("B%d=\"%s\"", i, b.name);
+            }
+            config.writeln("");
+            foreach (b; bulbs)  {
+                b.write_config(config);
+                config.writeln("");
+            }
+            config.writeln("");
+            config.close();
+            
+        } catch (Exception e)  {
+            writeln("Can't write config file ", filepath, ":  ", e.msg);
+        }
+    }
+    
+    
+    void SaveBulbStates(string filepath)   {
+        try {
+            auto config = File(filepath, "w");
+            config.writefln("[bulb-states]");
+            foreach (i,b; bulbs)   {
+                config.writefln("[bulb-state.]");
+                config.writefln("H%d=\"%s\"", i, b.hub.name);
+                config.writefln("[bulbs.%s]", b.name);
+                config.writefln("name=\"%s\"",b.name);
+            }
+        } catch (Exception e)  {
+            writeln("Can't write config file ", filepath, ":  ", e.msg);
+        }
+        
+    }
+    
+    
+    
     void loadCannedSystemDSW()  {
-        Hub hub1 =  new Hub("H1",  "192.168.11.17",  "VHQitrMnCUvVb4YLmuTmYQvO54ZjUgihgSJGKTFy");
-        Hub hub2 =  new Hub("H2",  "192.168.11.50",  "78g2lrMNHZHZFozjDJ7z7lneQhl8guZpzssU0HIr");
+        Hub hub1 =  new Hub("Hub1",  "192.168.11.17",  "VHQitrMnCUvVb4YLmuTmYQvO54ZjUgihgSJGKTFy");
+        Hub hub2 =  new Hub("Hub2",  "192.168.11.50",  "78g2lrMNHZHZFozjDJ7z7lneQhl8guZpzssU0HIr");
         hubs ~= hub1;   hub1.index=0;
         hubs ~= hub2;   hub2.index=1;
         
@@ -31,20 +104,13 @@ class PhueSystem
         bulbs ~= new Bulb(hub2, 35, "Lamp2");
         bulbs ~= new Bulb(hub2, 36, "Lamp3");
 
-        update_bulbs_from_reality();
+        //update_bulb_states_from_reality();
     }
     
     
-    void update_bulbs_from_reality()   {
+    void update_bulb_states_from_reality()   {
         foreach (ref b; bulbs)   {
-                JSONValue json = b.hub.getbulbstate(b.bnum);
-                JSONValue state = json["state"];
-                auto bri = state["bri"].integer/255.0f;
-                auto x =  state["xy"][0].floating;
-                auto y =  state["xy"][1].floating;
-                b.current_color = PhueColor(bri, x, y);
-                b.gamut = json["capabilities"]["control"]["colorgamuttype"].str;
-                b.model = json["modelid"].str;
+            b.update_bulb_state_from_reality();
         }
     }
 

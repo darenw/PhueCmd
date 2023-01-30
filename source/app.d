@@ -24,7 +24,7 @@ import phuesystem;
 import randomshow;
 import wakeup;
 import dlangui;
-
+import toml;
 
 immutable string helptext = q"ZZZ
 PhueCmd: operate your Philips Hue bulbs in fun and useful ways.
@@ -40,11 +40,12 @@ Usage:
      bash> phuecmd on            -- turn on all bulbs. Colors same as before.
      bash> phuecmd off           -- turn off all bulbs.
      bash> phuecmd set n bri x y  -- set brightness, color of one bulb. Bri=0.0 to 1.0
+     bash> phuecmd 6500K          -- all bulbs set to Planck blackbody temperature 6500K
      bash> phuecmd bright         -- set all bulbs to brightest white (
      bash> phuecmd dimblue        -- set all bulbs to dim blue-violet
      bash> phuecmd half           -- make all bulbs half as bright 
-     bash> phuecmd 
-     bash> phuecmd 
+     bash> phuecmd ...            -- more to come, TBD... 
+     bash> phuecmd                -- no args: run in command mode (not yet implemented)
 ZZZ";
 
 
@@ -59,6 +60,10 @@ void SimpleCommand(ref PhueSystem system, string cmd)  {
             system.listAll();
             break;
                 
+        case "saveconfig":
+            system.saveSystemConfig("x.toml");
+            break;
+            
         case "random":
             run_random_show(system);
             break;
@@ -122,7 +127,7 @@ void SimpleCommand(ref PhueSystem system, string cmd)  {
 }
 
 
-TimeOfDay tod(string arg)   {
+std.datetime.date.TimeOfDay tod(string arg)   {
     auto parts = arg.findSplit(":");
     if (parts[1].length==0) {
         throw new DateTimeException("no : in time of day");
@@ -139,9 +144,9 @@ TimeOfDay tod(string arg)   {
             s = 0;
         }
     } catch (Exception) {
-        throw new DateTimeException("Can't parse mm:ss");
+        throw new std.datetime.date.DateTimeException("Can't parse mm:ss");
     }
-    return TimeOfDay(h, m, s);
+    return std.datetime.date.TimeOfDay(h, m, s);
 }
 
 
@@ -153,7 +158,7 @@ void FancierCommand(PhueSystem system, string[] args)  {
     switch (cmd)  {
 
         case "wakeup": 
-            TimeOfDay tawake;
+            std.datetime.date.TimeOfDay tawake;
             try {
                 tawake = tod(args[2]);
                 writeln("wakeup set for ", tawake);
@@ -186,7 +191,11 @@ void main(string[] args)
     // Should create system from config file, network search, or other means
     // but for now, all I have is hardcoded info
     PhueSystem system = new PhueSystem();
+    
+    writeln("Loading system");
     system.loadCannedSystemDSW();
+    //system.loadSystemConfig("x.toml");
+    writeln("done loading");
     
  
     switch (args.length)  {
@@ -201,4 +210,8 @@ void main(string[] args)
         default:
                 FancierCommand(system, args);
     }
+    
+    system.saveSystemConfig("done.toml");
+    system.SaveBulbStates("state.toml");
+    
 }
