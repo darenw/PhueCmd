@@ -50,7 +50,7 @@ class Hub
     
     JSONValue get_bulb_json_info(bulbnumber bulbnum)  {
         auto reply = get(myurl ~ format("lights/%d", bulbnum));
-        return parseJSON(reply);
+        return  parseJSON(reply);
     }  
 }
 

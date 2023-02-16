@@ -77,19 +77,17 @@ class PhueSystem
     
     
     void SaveBulbStates(string filepath)   {
+        writeln("Saving color states of bulbs...");
         try {
-            auto config = File(filepath, "w");
-            config.writefln("[bulb-states]");
-            foreach (i,b; bulbs)   {
-                config.writefln("[bulb-state.]");
-                config.writefln("H%d=\"%s\"", i, b.hub.name);
-                config.writefln("[bulbs.%s]", b.name);
-                config.writefln("name=\"%s\"",b.name);
+            auto file = File(filepath, "w");
+            file.writefln("[bulb-states]");
+            foreach (b; bulbs)   {
+                b.update_state_from_reality();
+                b.write_state(file);
             }
         } catch (Exception e)  {
-            writeln("Can't write config file ", filepath, ":  ", e.msg);
+            writeln("Can't write bulb state file ", filepath, ":  ", e.msg);
         }
-        
     }
     
     
@@ -103,14 +101,12 @@ class PhueSystem
         bulbs ~= new Bulb(hub1, 29, "Lamp1");
         bulbs ~= new Bulb(hub2, 35, "Lamp2");
         bulbs ~= new Bulb(hub2, 36, "Lamp3");
-
-        //update_bulb_states_from_reality();
     }
     
     
     void update_bulb_states_from_reality()   {
         foreach (ref b; bulbs)   {
-            b.update_bulb_state_from_reality();
+            b.update_state_from_reality();
         }
     }
 
