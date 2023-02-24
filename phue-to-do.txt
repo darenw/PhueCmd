@@ -1,7 +1,11 @@
 PhueCmd - work to do
 
+[ ] fix 'half' 
+
 [ ] config file for hub key, known bulbs, wakeup seq, etc
 [ ] scan LAN for new hubs
+[ ] 'blink' command
+[ ] color code all bulbs: hub's bulb id, hubnum, system bulb id
 [ ] hub scan for new bulbs. Remind: turn on/off bulbs wanted/not
 [ ] cmd line options:  --config file, --use-canned, --other options...  
 [ ] random color gen: white avoidance, correlated color sets

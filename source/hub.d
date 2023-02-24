@@ -45,7 +45,11 @@ class Hub
     
     void setbulbstate(bulbnumber bulbnum, string json)   {
         string api = format("lights/%d/state", bulbnum);
-        put(myurl ~ api, json);
+        try {
+            put(myurl ~ api, json);
+        } catch (Exception e) {
+            writeln(e.msg);
+        }
     }
     
     JSONValue get_bulb_json_info(bulbnumber bulbnum)  {
