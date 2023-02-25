@@ -12,6 +12,7 @@
 		"icontheme": "1.2.3",
 		"inilike": "1.2.2",
 		"isfreedesktop": "0.1.1",
+		"readline": "0.3.0",
 		"toml": "2.0.1",
 		"unit-threaded": "2.0.5",
 		"x11": "1.0.21",

@@ -73,7 +73,7 @@ class Bulb
     
     
     void write_state(ref File statefile)  {
-        statefile.writefln("\n[bulbs.%s]",  name);
+        statefile.writefln("\n[Bulb.%s]",  name);
         statefile.writefln("name=\"%s\"", name);
         statefile.writefln("state=\"%s\"", (state==BulbState.on)? "on":"off");
         statefile.writefln("bri=%.3f", current_color.bri);
@@ -90,7 +90,7 @@ class Bulb
     
     
     void write_config(ref File config)   {
-        config.writefln("[bulbs.%s]", name);
+        config.writefln("[Bulb.%s]", name);
         config.writefln("name=\"%s\"", name);
         if (model.length>0)
             config.writefln("model=\"%s\"", model);

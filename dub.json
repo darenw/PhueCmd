@@ -5,6 +5,7 @@
 	"copyright": "Copyright © 2022, darenw",
 	"dependencies": {
 		"dlangui": "~>0.10.2",
+		"readline": "~>0.3.0",
 		"toml": "~>2.0.1"
 	},
 	"description": "Philips Hue bulb controller for faking sunrise, other fun",

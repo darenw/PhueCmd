@@ -33,7 +33,7 @@ class Hub
     
     
     void write_config(ref File config)  {
-        config.writefln("[hub.%s]",  name);
+        config.writefln("[Hub.%s]",  name);
         config.writefln("name=\"%s\"", name);  
         config.writefln("ipaddr=\"%s\"", ipaddr);
         config.writefln("key=\"%s\"", key);
