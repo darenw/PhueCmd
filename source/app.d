@@ -71,7 +71,39 @@ void RunGui(PhueSystem system,  string[] args) {
 }
 
 
-void SimpleCommand(ref PhueSystem system, string cmd)  {
+
+
+std.datetime.date.TimeOfDay tod(string arg)   {
+    auto parts = arg.findSplit(":");
+    if (parts[1].length==0) {
+        throw new DateTimeException("no : in time of day");
+    }
+    int h = to!int(parts[0]);
+    int m, s;
+    auto x = parts[2].findSplit(":");
+    try {
+        if (x[2].length>0)  {
+            m = to!int(x[0]);
+            s = to!int(x[2]);
+        } else {
+            m = to!int(x[0]);
+            s = 0;
+        }
+    } catch (Exception) {
+        throw new std.datetime.date.DateTimeException("Can't parse mm:ss");
+    }
+    return std.datetime.date.TimeOfDay(h, m, s);
+}
+
+
+
+
+
+void obey_command(string[] args, PhueSystem system)   {
+//    writeln("Obeying ", args);
+    
+    string cmd = args[0];
+
     switch (cmd)   {
         
         case "quit":
@@ -146,51 +178,7 @@ void SimpleCommand(ref PhueSystem system, string cmd)  {
         case "--version":
             writeln(PHUECMD_Version);
             break;
-        
-        default:
-            char last = cmd[$-1];
-            if (isDigit(cmd[0]) && (last=='K' || last=='k')) {
-                float T = to!float(cmd[0 .. $-1]);
-                writeln(" /", last, "/   T=", T, "   allbutlast ", cmd[$-1] );
-                system.set_all_bulbs( blackbody(T) );
-            } else {
-                writefln("Unknown command %s", cmd);
-            }
-    }
-}
 
-
-std.datetime.date.TimeOfDay tod(string arg)   {
-    auto parts = arg.findSplit(":");
-    if (parts[1].length==0) {
-        throw new DateTimeException("no : in time of day");
-    }
-    int h = to!int(parts[0]);
-    int m, s;
-    auto x = parts[2].findSplit(":");
-    try {
-        if (x[2].length>0)  {
-            m = to!int(x[0]);
-            s = to!int(x[2]);
-        } else {
-            m = to!int(x[0]);
-            s = 0;
-        }
-    } catch (Exception) {
-        throw new std.datetime.date.DateTimeException("Can't parse mm:ss");
-    }
-    return std.datetime.date.TimeOfDay(h, m, s);
-}
-
-
-
-
-
-void FancierCommand(PhueSystem system, string[] args)  {
-    
-    string cmd = args[0];
-    
-    switch (cmd)  {
         case "wait":
             Duration dur = dur!("seconds")( to!int(args[1]) ); 
             Thread.sleep(dur);
@@ -272,26 +260,24 @@ void FancierCommand(PhueSystem system, string[] args)  {
             system.bulbs[ibulb].set( color );
             break;
         
+
         
         default:
+            char last = cmd[$-1];
+            if (isDigit(cmd[0]) && (last=='K' || last=='k')) {
+                float T = to!float(cmd[0 .. $-1]);
+                writeln(" /", last, "/   T=", T, "   allbutlast ", cmd[$-1] );
+                system.set_all_bulbs( blackbody(T) );
+            } else {
                 writefln("Unknown command %s", cmd);
-                
+            }
     }
 }
 
 
 
-void obey_command(string[] args, PhueSystem system)   {
-    writeln("Obeying ", args);
-    if (args.length>1) 
-        FancierCommand(system, args);
-    else
-        SimpleCommand(system, args[0]);
-
-}
-
-
 void obey_command(string line, PhueSystem system)  {
+    // User may be entering multiple commands sep'd by ; 
     foreach (subline; (strip(line)).split(";")) 
         obey_command( strip(subline).split!isWhite, system );
 }
@@ -301,12 +287,13 @@ void obey_command(string line, PhueSystem system)  {
 void run_command_loop(PhueSystem system)  {
     
     while (g_running)  {
-        //write("phuecmd> ");
-        //string line = stdin.readln();
         string line = to!string( readline("phuecmd> ") );
         obey_command(line, system);
     }
 }
+
+
+
 
 void main(string[] args)
 {
@@ -317,24 +304,14 @@ void main(string[] args)
     //system.loadCannedSystemDSW();
     system.loadSystemConfig("phuecmd.sys.toml");
     
+    
     switch (args.length)  {
         case 1: 
                 run_command_loop(system);
                 break;
                 
-        case 2: 
-                SimpleCommand(system, args[1]);
-                break;
-        
         default:
-                if (args[1]==":")  {
-                    string lumped = join(args[2 .. $]);
-                    writeln("Testing obey() with:  ", lumped);
-                    obey_command( lumped, system );
-                }
-                else
-                    FancierCommand(system, args[1 .. $]);
+                obey_command(args[1 .. $], system);
     }
-    
     
 }
