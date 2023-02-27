@@ -1,32 +1,34 @@
 PhueCmd - work to do
 
 [ ] cmd line options:  --config file, --use-canned, --other options...,   
-[ ] config file for hub key, known bulbs, 
+[x] config file for hub key, known bulbs, 
 [ ] config for wakeup seq, etc
 [x] command mode - same as cmd line but w prompt loop, staying within PhueCmd
 
-[ ] args & commands a big mess - shovel stuff into a Commander object
+[x] args & commands a big mess - shovel stuff into a Commander object
        this can hold ref to PhueSystem instead of passing it around
 	this can have .running flag instead of global var
-[ ] useless distinction between "simple" and "fancy" commands - merge the junk!
-[ ] "any key" for wakeup, random 
+[x] useless distinction between "simple" and "fancy" commands - merge the junk! DONE
+[ ] "any key" for wakeup, random   "any key" in D is a tricky thing!
 [x] fix 'half' -- fixed itself after hacking in command mode :)
        but it appears to work only in command mode, not shell command line
 [x] add 'wait' command (for command mode)
-[ ] 'blink' command  (sketched in place, does nothing yet)
+[x] 'blink' command  (sketched in place, does nothing yet) 
 [ ] color code all bulbs: hub's bulb id, hubnum, system bulb id
 [ ] wakeup time assumes tomorrow morning but ignore dates. Wait for post-midnight then watches  Should this be improved?
+[ ] "adj" command to work on existing bulb's state, nudge brightness or sat by % or Δ 
 [ ] scan LAN for new hubs for system
 [ ] hub scan for new bulbs. Remind: turn on/off bulbs wanted/not
 [ ] random color gen: white avoidance, correlated color sets
 [ ] curved transit path between keys in random 
 [ ] Sequence, tracks not bulbs,  .play()  Use in wakeup, arb programmed lights
+[ ] Location - distinct from Bulb Name. 
 [ ] Assignment to assign bulbs to a track
 [ ] Bulb groups. Have phuecmd 4000k apply only to one group, or all but one
 [ ] main() to dlangui's Main
 [ ] GUI for randomshow, trails on CIE map
 [ ] GUI for wakeup?
-[ ] or one massive gui for all functions?
+[ ] or one massive gui for all functions?  
 
 
 BULB NAMES:    

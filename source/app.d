@@ -23,6 +23,7 @@ import gnu.readline;
 import timeofday;
 import phuecolor;
 import bulb;
+import hub;
 import phuesystem;
 import randomshow;
 import wakeup;
@@ -77,6 +78,47 @@ class Commander  {
     }
     
     
+    void  turn_bulbs(BulbState desired_state, string[] args)  {
+        if (args.length==1)
+            system.set_all_bulbs(desired_state);
+        else foreach (arg; args[1 .. $]) {
+            Bulb  b = system.find_bulb(arg);
+            if (b)  b.turn(desired_state);
+        }
+    }
+
+    
+    void blink(string[] names)  {
+        
+        Duration pause = dur!("seconds")(1); 
+        bool performing = true;
+        bool on = true;
+        int count = 11;   // odd number to leave them on when done
+        while (performing && count>0)  {
+            foreach (name; names)  {
+                Hub h = system.find_hub(name);
+                if (h)   {
+                    foreach (b; system.bulbs) {
+                        if (b.hub == h) {
+                            b.turn(on);
+                        }
+                    }
+                }
+                else {
+                    Bulb b = system.find_bulb(name);
+                    if (b)
+                        b.turn(on);
+                }
+                    
+            }
+            Thread.sleep(pause);
+            count--;
+            on = !on;
+        }
+    }
+    
+    
+    
     void obey_command(string[] args)   {
     //    writeln("Obeying ", args);
         
@@ -98,7 +140,27 @@ class Commander  {
                 system.listAll();
                 break;
                 
-                    
+                
+            case "find":
+                foreach (arg; args[1 .. $])  {
+                    writef("Searching for entity \"%s\"... ", arg);
+                    bool found_anything=false;
+                    Hub h = system.find_hub(arg);
+                    Bulb b = system.find_bulb(arg);
+                    if (h)  {
+                        found_anything=true;
+                        h.describe_self();
+                    }
+                    if (b)  {
+                        found_anything=true;
+                        b.describe_self();
+                    }
+                    if (!found_anything) {
+                        writefln("   %s not found among bulbs or hubs", arg);
+                    }
+                }
+                break;
+                
             case "saveconfig":
                 system.saveSystemConfig("x.toml");
                 break;
@@ -122,12 +184,12 @@ class Commander  {
                 break;
                 
             case "on":
-                system.set_all_bulbs(BulbState.on);
+                turn_bulbs(BulbState.on, args);
                 break;
             
 
             case "off":
-                system.set_all_bulbs(BulbState.off);
+                turn_bulbs(BulbState.off, args);
                 break;
             
             
@@ -170,6 +232,7 @@ class Commander  {
                 writeln(PHUECMD_Version);
                 break;
 
+
             case "wait":
                 Duration dur = dur!("seconds")( to!int(args[1]) ); 
                 Thread.sleep(dur);
@@ -177,25 +240,11 @@ class Commander  {
                 
                 
             case "blink":
-                if (args.length<4)  {
-                    writeln("usage:  blink  hub/bulb");
+                if (args.length<2)  {
+                    writeln("usage:  blink  name name name ...  where name is a hub or bulb designation");
                     return;
                 }
-                string what = args[1];
-                string id = args[2];
-                switch (what)  {
-                    case "hub":
-                        writefln("Pretend to blink all lights on hub %s", id);
-                        break;
-                        
-                    case "bulb":
-                        writefln("Pretend to blink bulb %s", id);
-                        break;
-                        
-                    default:
-                }
-                write("Any key to stop blinking...");
-                auto x = stdin.readln();
+                blink(args[1 .. $]);
                 break;
                 
                 
@@ -240,19 +289,29 @@ class Commander  {
                 writeln("SET given: ", args);
                 if (args.length < 4) {
                 }
-                bulbindex ibulb = to!ushort(args[1]);
+/*                bulbindex ibulb = to!ushort(args[1]);
                 if (ibulb >= system.bulbs.length) {
                     writefln("Bulb index too large; list has only %d bulbs", system.bulbs.length);
                     return;
                 }
+*/ 
+                Bulb bulb = system.find_bulb(args[1]);
                 PhueColor color = PhueColor( 
                                     to!float(args[2]),
                                     to!float(args[3]),
                                     to!float(args[4]));
-                system.bulbs[ibulb].set( color );
+                //system.bulbs[ibulb].set( color );
+                if (bulb) {
+                    bulb.set(color);
+                }
                 break;
             
 
+            case "adj":
+                // parse for bulbname;   bri, sat, hue x, y;  +-11, +-%, ...
+                break;
+                
+                
             default:
                 // See if it's a temperature like "3600K"
                 char last = cmd[$-1];
@@ -270,7 +329,8 @@ class Commander  {
     void obey_command(string line)  {
         // User may be entering multiple commands sep'd by ; 
         foreach (subline; (strip(line)).split(";")) 
-            obey_command( strip(subline).split!isWhite );
+            //obey_command( strip(subline).split!isWhite );
+            obey_command( strip(subline).split );
     }
 
 

@@ -32,6 +32,10 @@ class Hub
     }
     
     
+    void describe_self()   {
+        writefln("hub[%d] %s %s  %s", index, name, ipaddr, key);
+    }
+    
     void write_config(ref File config)  {
         config.writefln("[Hub.%s]",  name);
         config.writefln("name=\"%s\"", name);  

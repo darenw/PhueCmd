@@ -42,11 +42,15 @@ commands:
     phuecmd> now          prints data, time of right now
     phuecmd> on           turns on all bulbs, whatever colors they were set to
     phuecmd> off          turns off all bulbs
-    phuecmd> blink hall3  sets bulb "Hall3" blinking until tap any key. 
-    phuecmd> blink Hub3   if x is name of a num
+    phuecmd> off B[1] B[44]   apply off (or on) to specific named bulbs
+    phuecmd> find Lamp2   look for a bulb with this name, report its basic info
+    phuecmd> find Hub1    look for hub with this name, report its basic info
+    phuecmd> find .17     look for hub with IP address ending with .17, report it
+    phuecmd> blink hall3  sets bulb "Hall3" blinking until tap any key. SEE NOTE
+    phuecmd> blink Hub3   if  name of a hub, blink all lights it manages
     phuecmd> bright       sets all bulbs to maximum white. (Turns on any that are off)
     phuecmd> dimblue      sets all bulbs to dim blue color (similar commands may exist)
-    phuecmd> set 3 0.1 0.55 0.31  sets bulb [3] to bri-0.1, x=0.55, y=0.31 (dim red)
+    phuecmd> set Lamp3 0.1 0.55 0.31  sets bulb [3] to bri-0.1, x=0.55, y=0.31 (dim red)
     phuecmd> half         sets all bulbs to half as bright, same color
     phuecmd> 5000K        blackbody white at 5000K.  Can do 2000K to 10000K.
     phuecmd> random       continuously varying random colors. 
@@ -59,6 +63,11 @@ commands:
     phuecmd> random1 ; wait 20 ; random1     multiple commands sep'd by ; 
     phuecmd> quit         exit command mode, return to shell prompt
 
+
+Note on "blink":  "hit any key" is ... tricky. For now, blinks five times then leaves bulbs on.
+
+Note on 'find' and other command taking a bulb name or hub name: see section below about bulb names. 
+I hope it is up to date at this time!
 
 If no config file loading command is given, phuecmd will read phuecmd.sys.toml.
 (Not really - current version may be using hardcoded "canned" config info. Work In Progress!)

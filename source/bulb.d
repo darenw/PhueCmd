@@ -34,8 +34,23 @@ class Bulb
         name = _name;
     }
     
+    void describe_self() {
+        writefln("Bulb  %s H%dB%d %s  %s gamut %s",  
+            name, 
+            hub.index, 
+            bnum,       
+            current_color,
+            model,
+            gamut);
+    }
+    
+    
     void turn(BulbState state)  {
         hub.setbulbstate(bnum, format(`{"on":%s}`,  state==BulbState.on?  "true" : "false"));
+    }
+    
+    void turn(bool on)  {
+        turn((on)? BulbState.on : BulbState.off);
     }
     
     
@@ -58,7 +73,7 @@ class Bulb
     void update_state_from_reality()   {
         JSONValue json = hub.get_bulb_json_info(bnum);
         auto statejson = json["state"];
-        writeln(name, ": ", statejson);
+        //writeln(name, ": ", statejson);
         this.state = (statejson["on"].boolean)? BulbState.on : BulbState.off;
         float bri;
         try {
