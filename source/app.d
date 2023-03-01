@@ -20,6 +20,7 @@ import std.algorithm;
 import std.datetime;
 import core.thread;
 import gnu.readline;
+//import gnu.history;
 import timeofday;
 import phuecolor;
 import bulb;
@@ -29,6 +30,11 @@ import randomshow;
 import wakeup;
 import dlangui;
 import toml;
+
+extern (C) {
+    void add_history(const char*);
+}
+
 
 immutable PHUECMD_Version = "PhueCmd Version 0.1";
 
@@ -338,7 +344,11 @@ class Commander  {
     void run_command_loop()  {
         while (running)  {
             string line = to!string( readline("phuecmd> ") );
-            obey_command(line);
+            line = strip(line);
+            if (line.length>0)  {
+                add_history( std.string.toStringz(line) );
+                obey_command(line);
+            }
         }
     }
 
