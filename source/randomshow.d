@@ -14,8 +14,9 @@ import anykey;
 // Settings - hardcoded for now. In future, will be GUI sliders, checkboxes etc
 
 float max_brightness = 0.5f;
-Duration pause = dur!("seconds")(15);    // fast-paced for testing
-int nsteps = 11;
+Duration one_second = dur!("seconds")(1);    // fast-paced for testing
+const int pause = 15;   // seconds between steps of color interpolation
+int nsteps = 11;        // how many steps tweening two key colors
 
 
 void run_random_show(PhueSystem system)  {
@@ -39,10 +40,12 @@ void run_random_show(PhueSystem system)  {
             foreach (i, ref b; system.bulbs)  {
                 b.set( sine_mix(color1[i], f, color2[i]) );
             }
-            Thread.sleep(pause);
-            if (is_key_pressed())  {
-                running=false;
-                break; 
+            for (int p=pause; p>0; p--) {
+                Thread.sleep(one_second);
+                if (is_key_pressed())  {
+                    running=false;
+                    break; 
+                }
             }
         }
         
