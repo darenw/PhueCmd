@@ -22,6 +22,7 @@ import core.thread;
 import gnu.readline;
 //import gnu.history;
 import timeofday;
+import anykey;
 import phuecolor;
 import bulb;
 import hub;
@@ -318,6 +319,28 @@ class Commander  {
                 break;
                 
                 
+            case "testanykey":
+                writeln("TEST: any key pressed");
+                launch_key_checker();
+                while (true)  {
+                    write("? "); stdout.flush;
+                    Duration dur = dur!("seconds")( to!int(1) ); 
+                    Thread.sleep(dur);
+                    if (is_key_pressed())  {
+                        writeln("TEST: KEY PRESSED!!!");
+                        break;
+                    }
+                }
+                writeln("TEST: Exit anykey test");
+                break;
+                
+            case "testgetchar":
+                writeln("befoer getchar()\n");
+                auto cx=getchar();
+                writeln("getchar() returns ",cx);
+                break;
+            
+            
             default:
                 // See if it's a temperature like "3600K"
                 char last = cmd[$-1];

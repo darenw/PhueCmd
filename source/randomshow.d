@@ -1,16 +1,14 @@
 // Run lights randomly
 
 import std.stdio;
-import core.stdc.stdlib;
 import std.format;
 import std.string;
-import dlangui;
+import core.stdc.stdlib;
 import core.thread;
+import dlangui;
 import phuecolor;
 import phuesystem;
-
-//extern (C) int kbhit();
-//extern (C) int getch();
+import anykey;
 
 
 // Settings - hardcoded for now. In future, will be GUI sliders, checkboxes etc
@@ -22,7 +20,7 @@ int nsteps = 11;
 
 void run_random_show(PhueSystem system)  {
     
-    writeln("Tap ctrl-C or 'Q' to quit");
+    writeln("Tap Enter to exit random mode");
     ulong nbulbs = system.bulbs.length;
     
     PhueColor[] color1;   color1.length = nbulbs; 
@@ -34,7 +32,7 @@ void run_random_show(PhueSystem system)  {
         color2[i] = random_color(0.5*max_brightness, max_brightness);
     }
     
-    
+    launch_key_checker();
     bool running = true;
     while (running) {
         for (float f = 0.0f;  f < 1.001f; f += 1.0f/nsteps)  {
@@ -42,6 +40,10 @@ void run_random_show(PhueSystem system)  {
                 b.set( sine_mix(color1[i], f, color2[i]) );
             }
             Thread.sleep(pause);
+            if (is_key_pressed())  {
+                running=false;
+                break; 
+            }
         }
         
         // Update color targets.
@@ -50,7 +52,8 @@ void run_random_show(PhueSystem system)  {
             color2[i] = random_color(0.2f*max_brightness, max_brightness);
         }
 //        writeln("  ", color1);
-//        writeln("  ", color2);        
+//        writeln("  ", color2);       
+
     }
     
 }
